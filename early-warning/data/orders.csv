@@ -1,0 +1,11 @@
+order_id,time,account,advisor,symbol,side,qty,channel
+ORD-1001,09:31:04,12345,A. Patel,AAPL,SELL,500,Advisor portal
+ORD-1002,09:32:40,22018,J. Moreno,VTI,SELL,600,Rebalance tool
+ORD-1003,09:35:12,30442,L. Chen,TSLA,SELL,300,Advisor portal
+ORD-1004,09:41:55,22018,J. Moreno,NVDA,SELL,110,Advisor portal
+ORD-1005,09:44:01,41907,A. Patel,AMZN,SELL,220,Advisor portal
+ORD-1006,09:47:30,12345,A. Patel,MSFT,SELL,150,Advisor portal
+ORD-1007,09:52:18,78901,K. Brooks,VTI,SELL,900,Advisor portal
+ORD-1008,10:03:09,55120,J. Moreno,GOOGL,SELL,75,Rebalance tool
+ORD-1009,10:03:41,55120,J. Moreno,GOOGL,SELL,75,Rebalance tool
+ORD-1010,10:15:27,22018,J. Moreno,VTI,SELL,500,Rebalance tool

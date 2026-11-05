@@ -1,0 +1,9 @@
+account,advisor,symbol,settled_qty,pledged_qty,restriction
+12345,A. Patel,AAPL,450,0,
+12345,A. Patel,MSFT,200,0,
+22018,J. Moreno,VTI,1200,0,
+22018,J. Moreno,NVDA,80,0,
+30442,L. Chen,TSLA,300,100,
+41907,A. Patel,AMZN,150,0,
+78901,K. Brooks,VTI,900,0,LEGAL_HOLD
+55120,J. Moreno,GOOGL,60,0,

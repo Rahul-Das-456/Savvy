@@ -1,0 +1,381 @@
+{
+  "metrics": {
+    "run_date": "2026-11-05",
+    "settlement_date": "2026-11-06",
+    "sell_orders": 10,
+    "blocked": 5,
+    "held": 1,
+    "warned": 2,
+    "clean": 2,
+    "breaks_prevented": 6
+  },
+  "alerts": [
+    {
+      "order_id": "ORD-1001",
+      "time": "09:31:04",
+      "account": "12345",
+      "advisor": "A. Patel",
+      "symbol": "AAPL",
+      "qty": 500,
+      "severity": "BLOCK",
+      "rule": "R4 Sell exceeds deliverable position",
+      "finding": "Sells 500, can deliver 450 by 2026-11-06. 50 shares short; the excess is not in the account.",
+      "action": "Block pre-trade. Advisor resubmits for the available amount, or Ops confirms incoming shares first.",
+      "cites": "Reg SHO 200(g)(1); Reg SHO 203(b)(1); Reg SHO 204(a); FINRA 4311",
+      "available": 450,
+      "context": {
+        "settled": 450,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": []
+      }
+    },
+    {
+      "order_id": "ORD-1003",
+      "time": "09:35:12",
+      "account": "30442",
+      "advisor": "L. Chen",
+      "symbol": "TSLA",
+      "qty": 300,
+      "severity": "BLOCK",
+      "rule": "R4 Sell exceeds deliverable position",
+      "finding": "Sells 300, can deliver 200 by 2026-11-06. 100 shares short; the excess is pledged as collateral.",
+      "action": "Block pre-trade. Advisor resubmits for the available amount, or Ops confirms incoming shares first.",
+      "cites": "Reg SHO 200(g)(1); Reg SHO 203(b)(1); Reg SHO 204(a); FINRA 4311",
+      "available": 200,
+      "context": {
+        "settled": 300,
+        "pledged": 100,
+        "unsettled_buys": 0,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": []
+      }
+    },
+    {
+      "order_id": "ORD-1006",
+      "time": "09:47:30",
+      "account": "12345",
+      "advisor": "A. Patel",
+      "symbol": "MSFT",
+      "qty": 150,
+      "severity": "BLOCK",
+      "rule": "R4 Sell exceeds deliverable position",
+      "finding": "Sells 150, can deliver 0 by 2026-11-06. 150 shares short; the excess is committed to an outgoing transfer.",
+      "action": "Block pre-trade. Advisor resubmits for the available amount, or Ops confirms incoming shares first.",
+      "cites": "Reg SHO 200(g)(1); Reg SHO 203(b)(1); Reg SHO 204(a); FINRA 4311",
+      "available": 0,
+      "context": {
+        "settled": 200,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 200,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "200 committed to an outgoing ACATS transfer"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1007",
+      "time": "09:52:18",
+      "account": "78901",
+      "advisor": "K. Brooks",
+      "symbol": "VTI",
+      "qty": 900,
+      "severity": "BLOCK",
+      "rule": "R1 Restricted account",
+      "finding": "Account carries LEGAL_HOLD. No sells until Legal releases it.",
+      "action": "Reject the order. Notify Compliance and Legal the same day; log the attempt.",
+      "cites": "FINRA 3110(b); FINRA 4511",
+      "available": 900,
+      "context": {
+        "settled": 900,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": []
+      }
+    },
+    {
+      "order_id": "ORD-1009",
+      "time": "10:03:41",
+      "account": "55120",
+      "advisor": "J. Moreno",
+      "symbol": "GOOGL",
+      "qty": 75,
+      "severity": "BLOCK",
+      "rule": "R4 Sell exceeds deliverable position",
+      "finding": "Sells 75, can deliver 5 by 2026-11-06. 70 shares short; the excess is already sold earlier today.",
+      "action": "Block pre-trade. Advisor resubmits for the available amount, or Ops confirms incoming shares first.",
+      "cites": "Reg SHO 200(g)(1); Reg SHO 203(b)(1); Reg SHO 204(a); FINRA 4311",
+      "available": 5,
+      "context": {
+        "settled": 60,
+        "pledged": 0,
+        "unsettled_buys": 20,
+        "ats_out": 0,
+        "sold_earlier_today": 75,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "20 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1005",
+      "time": "09:44:01",
+      "account": "41907",
+      "advisor": "A. Patel",
+      "symbol": "AMZN",
+      "qty": 220,
+      "severity": "HOLD",
+      "rule": "R3 Depends on unconfirmed transfer",
+      "finding": "Covers only if the incoming transfer arrives. Without it, 70 shares short at T+1 (2026-11-06).",
+      "action": "Hold until Fidelity confirms the ACATS shares, or reduce the order to the available amount.",
+      "cites": "Reg SHO 200(g); Reg SHO 204(a); SEA 15c3-3(m)",
+      "available": 150,
+      "context": {
+        "settled": 150,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 100,
+        "notes": [
+          "100 on an incoming ACATS transfer, status IN_REVIEW, due 2026-11-09"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1009",
+      "time": "10:03:41",
+      "account": "55120",
+      "advisor": "J. Moreno",
+      "symbol": "GOOGL",
+      "qty": 75,
+      "severity": "HOLD",
+      "rule": "R2 Possible duplicate",
+      "finding": "Same account, symbol and quantity as ORD-1008 32s earlier.",
+      "action": "Hold. Ask the advisor to confirm both orders are intended before release.",
+      "cites": "FINRA 3110; SEA 17a-3(a)(6)",
+      "available": 5,
+      "context": {
+        "settled": 60,
+        "pledged": 0,
+        "unsettled_buys": 20,
+        "ats_out": 0,
+        "sold_earlier_today": 75,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "20 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1001",
+      "time": "09:31:04",
+      "account": "12345",
+      "advisor": "A. Patel",
+      "symbol": "AAPL",
+      "qty": 500,
+      "severity": "WARN",
+      "rule": "R8 Repeat advisor",
+      "finding": "A. Patel had 2 oversell breaks in the last 30 days.",
+      "action": "Escalate to the supervising principal. Offer order-entry coaching; review for a pattern.",
+      "cites": "FINRA 3110(a)",
+      "available": 450,
+      "context": {
+        "settled": 450,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": []
+      }
+    },
+    {
+      "order_id": "ORD-1004",
+      "time": "09:41:55",
+      "account": "22018",
+      "advisor": "J. Moreno",
+      "symbol": "NVDA",
+      "qty": 110,
+      "severity": "WARN",
+      "rule": "R6 Corporate action near settlement",
+      "finding": "SPLIT (4-for-1 forward split) goes ex on 2026-11-06. Share count and price basis change around settlement.",
+      "action": "Pass, but confirm the order is on the right basis and watch it through settlement.",
+      "cites": "SEA 17a-3(a)(6); FINRA 11000 series",
+      "available": 120,
+      "context": {
+        "settled": 80,
+        "pledged": 0,
+        "unsettled_buys": 40,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "40 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1004",
+      "time": "09:41:55",
+      "account": "22018",
+      "advisor": "J. Moreno",
+      "symbol": "NVDA",
+      "qty": 110,
+      "severity": "WARN",
+      "rule": "R7 Relies on an unsettled buy",
+      "finding": "40 of the shares come from a buy that settles 2026-11-06. If that buy fails, so does this sale.",
+      "action": "Pass. Put both trades on the settlement watch list.",
+      "cites": "Reg SHO 200(g)(1)",
+      "available": 120,
+      "context": {
+        "settled": 80,
+        "pledged": 0,
+        "unsettled_buys": 40,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "40 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1005",
+      "time": "09:44:01",
+      "account": "41907",
+      "advisor": "A. Patel",
+      "symbol": "AMZN",
+      "qty": 220,
+      "severity": "WARN",
+      "rule": "R8 Repeat advisor",
+      "finding": "A. Patel had 2 oversell breaks in the last 30 days.",
+      "action": "Escalate to the supervising principal. Offer order-entry coaching; review for a pattern.",
+      "cites": "FINRA 3110(a)",
+      "available": 150,
+      "context": {
+        "settled": 150,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 100,
+        "notes": [
+          "100 on an incoming ACATS transfer, status IN_REVIEW, due 2026-11-09"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1006",
+      "time": "09:47:30",
+      "account": "12345",
+      "advisor": "A. Patel",
+      "symbol": "MSFT",
+      "qty": 150,
+      "severity": "WARN",
+      "rule": "R8 Repeat advisor",
+      "finding": "A. Patel had 2 oversell breaks in the last 30 days.",
+      "action": "Escalate to the supervising principal. Offer order-entry coaching; review for a pattern.",
+      "cites": "FINRA 3110(a)",
+      "available": 0,
+      "context": {
+        "settled": 200,
+        "pledged": 0,
+        "unsettled_buys": 0,
+        "ats_out": 200,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "200 committed to an outgoing ACATS transfer"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1008",
+      "time": "10:03:09",
+      "account": "55120",
+      "advisor": "J. Moreno",
+      "symbol": "GOOGL",
+      "qty": 75,
+      "severity": "WARN",
+      "rule": "R7 Relies on an unsettled buy",
+      "finding": "20 of the shares come from a buy that settles 2026-11-06. If that buy fails, so does this sale.",
+      "action": "Pass. Put both trades on the settlement watch list.",
+      "cites": "Reg SHO 200(g)(1)",
+      "available": 80,
+      "context": {
+        "settled": 60,
+        "pledged": 0,
+        "unsettled_buys": 20,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "20 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1004",
+      "time": "09:41:55",
+      "account": "22018",
+      "advisor": "J. Moreno",
+      "symbol": "NVDA",
+      "qty": 110,
+      "severity": "INFO",
+      "rule": "R5 Near-full liquidation",
+      "finding": "Sells 110 of 120 available (92%).",
+      "action": "Pass. Confirm the client meant a full or near-full exit; check for open orders elsewhere.",
+      "cites": "FINRA 2090",
+      "available": 120,
+      "context": {
+        "settled": 80,
+        "pledged": 0,
+        "unsettled_buys": 40,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "40 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    },
+    {
+      "order_id": "ORD-1008",
+      "time": "10:03:09",
+      "account": "55120",
+      "advisor": "J. Moreno",
+      "symbol": "GOOGL",
+      "qty": 75,
+      "severity": "INFO",
+      "rule": "R5 Near-full liquidation",
+      "finding": "Sells 75 of 80 available (94%).",
+      "action": "Pass. Confirm the client meant a full or near-full exit; check for open orders elsewhere.",
+      "cites": "FINRA 2090",
+      "available": 80,
+      "context": {
+        "settled": 60,
+        "pledged": 0,
+        "unsettled_buys": 20,
+        "ats_out": 0,
+        "sold_earlier_today": 0,
+        "incoming_unconfirmed": 0,
+        "notes": [
+          "20 from an unsettled buy settling 2026-11-06"
+        ]
+      }
+    }
+  ]
+}

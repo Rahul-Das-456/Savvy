@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ops Monitor Demo · Rahul Das</title>
+<meta name="description" content="A broker-dealer back-office monitoring dashboard for a take-home exercise: key risk indicators, charts and a working alert queue on fake Q2 2026 data.">
+<meta name="author" content="Rahul Das">
+<meta name="robots" content="noindex, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  :root { --line: #2a3558; --line-2: #33406a; --amber: #f2b84b; --pad: clamp(14px, 1.6vw, 22px); }
+  body { font-size: 15px !important; }
+  .app { width: min(1440px, 100% - 2 * var(--m)); margin: 0 auto; padding: 20px 0 64px; display: grid; gap: 12px; }
+  .top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; padding: 8px 0 6px; }
+  .top h1 { font-size: clamp(1.35rem, 1.1rem + 0.6vw, 1.75rem) !important; margin: 0; }
+  .top p { margin: 4px 0 0; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--surface); padding: 4px; gap: 2px; }
+  .seg button { font: inherit; font-weight: 500; border: 0; background: none; color: var(--muted); padding: 0 14px; min-height: 40px; cursor: pointer; transition: background-color var(--t-hover) var(--ease-out), color var(--t-hover) var(--ease-out); }
+  .seg button:hover { color: var(--ink-hi); }
+  .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink-hi); }
+  .p { background: var(--surface); padding: var(--pad); min-width: 0; }
+  .p h2 { font-size: 15px !important; font-weight: 600 !important; letter-spacing: 0 !important; line-height: 1.3 !important; margin: 0 0 2px; }
+  .p .sub { color: var(--muted); margin: 0 0 14px; font-size: 13.5px; }
+
+  /* KRI strip: type, not tiles */
+  .kris { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; background: var(--surface); }
+  .kri { padding: 16px var(--pad) 18px; position: relative; }
+  .kri + .kri::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 1px; background: var(--line); }
+  .kri .l { color: var(--muted); font-size: 13.5px; line-height: 1.3; min-height: 2.6em; }
+  .kri .v { font-size: clamp(1.7rem, 1.1rem + 1.2vw, 2.4rem); font-weight: 600; letter-spacing: -0.04em; line-height: 1.05; font-variant-numeric: tabular-nums; margin-top: 6px; }
+  .kri .t { font-size: 13px; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .s-red { color: var(--accent); } .s-amber { color: var(--amber); } .s-green { color: var(--bid); }
+  .bg-red { background: var(--accent); } .bg-amber { background: var(--amber); } .bg-green { background: var(--bid); }
+
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  .c8 { grid-column: span 8; } .c4 { grid-column: span 4; } .c6 { grid-column: span 6; } .c5 { grid-column: span 5; } .c7 { grid-column: span 7; } .c3 { grid-column: span 3; } .c12 { grid-column: span 12; }
+  svg.ch { width: 100%; height: auto; display: block; overflow: visible; }
+  svg.ch text { font-family: var(--font); font-size: 12px; fill: var(--muted); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 6px; }
+  .stat { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 10px; }
+  .stat div { font-size: 13px; color: var(--muted); }
+  .stat b { display: block; font-size: 22px; color: var(--ink-hi); font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+  .funnel { display: grid; gap: 8px; }
+  .funnel .fr { display: grid; grid-template-columns: 9em 1fr 3em; gap: 10px; align-items: center; font-size: 13.5px; }
+  .funnel .bar { height: 26px; background: var(--surface-2); position: relative; }
+  .funnel .bar span { position: absolute; inset: 0 auto 0 0; background: var(--blue); }
+  .funnel .n { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .cal { list-style: none; margin: 0; padding: 0; }
+  .cal li { display: grid; grid-template-columns: 5.5em 1fr auto; gap: 10px; padding: 12px 14px; background: var(--bg); margin-bottom: 4px; align-items: baseline; font-size: 14px; }
+
+  .cal .d { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cal .s { font-weight: 600; font-size: 13px; }
+
+  /* queue */
+  .qhead { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: end; margin-bottom: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips button { font: inherit; font-size: 13.5px; border: 0; background: var(--bg); color: var(--muted); padding: 0 12px; min-height: 36px; cursor: pointer; transition: background-color var(--t-hover) var(--ease-out), color var(--t-hover) var(--ease-out); }
+  .chips button:hover { color: var(--ink-hi); }
+  .chips button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink-hi); }
+  .chips b { font-weight: 600; margin-left: 6px; color: var(--ink-hi); }
+  .qwrap { overflow-x: auto; }
+  table.qt { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px !important; }
+  .qt th { text-align: left; font-weight: 500 !important; color: var(--muted) !important; font-size: 13px !important; padding: 8px 10px; border-bottom: 1px solid var(--line-2) !important; }
+  .qt td { padding: 10px; border-bottom: 1px solid var(--line) !important; color: var(--ink-hi) !important; vertical-align: middle; }
+  .qt td.n, .qt th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .qt tbody tr { cursor: pointer; transition: background-color var(--t-hover) var(--ease-out); }
+  .qt tbody tr:hover { background: var(--surface-2); }
+  .qt tbody tr[aria-selected="true"] { background: #2b3963; }
+  .qt tbody tr:focus-visible { outline-offset: -3px; }
+  .who { display: inline-flex; align-items: center; gap: 8px; }
+  .av { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--bg); }
+  .sla { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .st { font-size: 13px; }
+
+  .detail { display: grid; gap: 12px; align-content: start; position: sticky; top: 92px; }
+  .detail h3 { font-size: 20px !important; margin: 0; letter-spacing: -0.02em !important; }
+  .kv { display: grid; grid-template-columns: 7.5em 1fr; gap: 6px 12px; font-size: 14px; margin: 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .steps span { font-size: 12.5px; text-align: center; padding: 8px 2px; background: var(--bg); color: var(--muted); }
+  .steps span.done { background: var(--surface-2); color: var(--ink-hi); }
+  .steps span.now { background: var(--blue); color: var(--bg); font-weight: 600; }
+  .acts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .acts button { font: inherit; font-weight: 600; font-size: 14px; border: 0; min-height: 40px; padding: 0 14px; cursor: pointer; background: var(--surface-2); color: var(--ink-hi); transition: background-color var(--t-hover) var(--ease-out), transform var(--t-press) var(--ease-out); }
+  .acts button:hover { background: #2d3b66; }
+  .acts button:active { transform: scale(0.97); }
+  .acts .go { background: var(--accent); color: var(--accent-ink); }
+  .acts .go:hover { background: #ff7466; }
+  .acts button:disabled { opacity: 0.4; cursor: not-allowed; }
+  textarea { font: inherit; font-size: 14px; color: var(--ink-hi); background: var(--bg); border: 1px solid var(--line-2); padding: 10px; width: 100%; min-height: 72px; resize: vertical; }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+  .lbl { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .log { list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--muted); display: grid; gap: 4px; max-height: 150px; overflow: auto; }
+  .log b { color: var(--ink-hi); font-weight: 500; }
+  .hint { font-size: 13px; color: var(--muted); }
+  .foot { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; color: var(--muted); font-size: 13.5px; padding-top: 8px; }
+  .foot a { color: var(--ink-hi); }
+
+  @media (max-width: 1180px) {
+    .kris { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kri:nth-child(4)::before { display: none; }
+    .c8, .c4, .c6, .c5, .c7, .c3 { grid-column: span 12; }
+  }
+  @media (max-width: 620px) {
+    .kris { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kri:nth-child(odd)::before { display: none; }
+    .kri:nth-child(4)::before { display: block; }
+    .steps span { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="bar__mark" href="./index.html">Rahul Das</a>
+  <nav class="bar__links" aria-label="This take-home">
+    <a href="./index.html#exceptions">Exceptions</a>
+    <a href="./index.html#review">Q2 review</a>
+    <a href="./dashboard.html" aria-current="page">Dashboard</a>
+  </nav>
+  <a class="bar__action" href="./index.html">Back to the write-up</a>
+</header>
+
+<main class="app" id="main">
+  <div class="top">
+    <div>
+      <h1>Back-office monitor, Q2 2026</h1>
+      <p>Introducing broker-dealer on Fidelity clearing. Demo data: every row is fake, totals match the brief.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Period">
+      <button type="button" data-per="Q" aria-pressed="true">Quarter</button>
+      <button type="button" data-per="2026-04" aria-pressed="false">April</button>
+      <button type="button" data-per="2026-05" aria-pressed="false">May</button>
+      <button type="button" data-per="2026-06" aria-pressed="false">June</button>
+    </div>
+  </div>
+
+  <section class="kris" id="kris" aria-label="Key risk indicators"></section>
+
+  <div class="grid">
+    <section class="p c8" aria-labelledby="h-br">
+      <h2 id="h-br">Trade break rate by week</h2>
+      <p class="sub" id="sub-br"></p>
+      <div id="ch-br"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Savvy break rate</span><span><i style="background:var(--muted)"></i>Industry 0.5%</span></div>
+    </section>
+    <section class="p c4" aria-labelledby="h-cause">
+      <h2 id="h-cause">Why trades broke</h2>
+      <p class="sub">Breaks by root cause, selected period</p>
+      <div id="ch-cause"></div>
+      <p class="hint" style="margin:14px 0 0">The top two causes are order-entry controls: pre-allocation before the order, and a position check before a sell. Both fixes are in the write-up.</p>
+    </section>
+
+    <section class="p c5" aria-labelledby="h-mm">
+      <h2 id="h-mm">Money movement approval time</h2>
+      <p class="sub">The average hides the tail advisors complain about</p>
+      <div class="stat" id="mm-stat"></div>
+      <div id="ch-mm"></div>
+    </section>
+    <section class="p c4" aria-labelledby="h-aml">
+      <h2 id="h-aml">AML alerts by time to clear</h2>
+      <p class="sub">SAR clock: 30 days from detection</p>
+      <div id="ch-aml"></div>
+    </section>
+    <section class="p c3" aria-labelledby="h-w">
+      <h2 id="h-w">International wires</h2>
+      <p class="sub">Holds told to advisor before they called</p>
+      <div class="funnel" id="funnel"></div>
+    </section>
+
+    <section class="p c8" aria-labelledby="h-q">
+      <div class="qhead">
+        <div><h2 id="h-q">Open items</h2><p class="sub" style="margin:0">Every exception has an owner, a clock and an audit trail. Select a row to work it.</p></div>
+        <div class="chips" role="group" aria-label="Queue" id="chips"></div>
+      </div>
+      <div class="qwrap">
+        <table class="qt">
+          <thead><tr><th>Item</th><th>What</th><th>Owner</th><th class="n">Age</th><th class="n">SLA left</th><th>Status</th></tr></thead>
+          <tbody id="qbody"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="p c4 detail" aria-labelledby="d-title" id="detail"></section>
+
+    <section class="p c12" aria-labelledby="h-cal">
+      <h2 id="h-cal">Regulatory calendar</h2>
+      <p class="sub">Filings and deadlines, counted in business days</p>
+      <ul class="cal" id="cal"></ul>
+    </section>
+  </div>
+
+  <div class="foot">
+    <span>Built by Rahul Das for a take-home exercise. Data generated, not real. CSVs for Tableau are on the <a href="./index.html#tableau">write-up</a>.</span>
+    <span>Records retained under SEA 17a-4 in a real deployment.</span>
+  </div>
+</main>
+
+<script src="assets/savvy/data.js"></script>
+<script>
+(() => {
+  const D = window.SAVVY;
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const C = { red: css('--accent') || '#ff5a4a', blue: css('--blue') || '#8fa8e6', muted: css('--muted') || '#aeb5c9', line: '#2a3558', bg2: css('--surface-2') || '#222e52', green: css('--bid') || '#45c98f', amber: '#f2b84b' };
+  let per = 'Q';
+  const inP = (r) => per === 'Q' || r.month === per || (r.d && r.d.slice(0, 7) === per);
+  const pctl = (a, p) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
+  const fmt = (n, d = 1) => Number(n).toFixed(d);
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = (w, h, inner, label) => `<svg class="ch" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${inner}</svg>`;
+
+  // KRIs
+  const status = (v, g, a) => (v <= g ? 'green' : v <= a ? 'amber' : 'red');
+  const statusHi = (v, g, a) => (v >= g ? 'green' : v >= a ? 'amber' : 'red');
+  function kris() {
+    const days = D.daily.filter(inP), tr = days.reduce((s, r) => s + r.trades, 0), br = days.reduce((s, r) => s + r.breaks, 0);
+    const rate = (100 * br) / tr;
+    const al = D.alloc.filter(inP), alAvg = al.length ? al.reduce((s, r) => s + r.days_to_resolve, 0) / al.length : 0;
+    const mm = D.mm.filter(inP).map((r) => r.h), p90 = pctl(mm, 0.9);
+    const aml = D.aml.filter(inP), aged = aml.filter((r) => r.aging_bucket !== '<24h').length;
+    const w = D.wires.filter(inP), held = w.filter((r) => r.held === 'Y').length;
+    const items = [
+      ['Trade break rate', fmt(rate, 2) + '%', 'Peer 0.5%', status(rate, 0.5, 0.7)],
+      ['Block allocation, avg days to fix', fmt(alAvg), 'Target: trade date', status(alAvg, 0.5, 1)],
+      ['Money movement, 90th percentile', fmt(p90) + 'h', 'Same day is 8h', status(p90, 8, 12)],
+      ['AML alerts open over 5 business days', aged, aml.length + ' alerts in period', aged ? 'red' : 'green'],
+      ['International wires held', held + ' of ' + w.length, 'Advisors told first: 0', held ? 'amber' : 'green'],
+      ['Regulatory items late, quarter', '4', 'FOCUS, 2 escheat, 1 request', 'red'],
+    ];
+    document.getElementById('kris').innerHTML = items.map(([l, v, t, s]) => `<div class="kri"><div class="l">${l}</div><div class="v">${v}</div><div class="t"><span class="dot bg-${s}"></span><span class="s-${s}">${s === 'red' ? 'Red' : s === 'amber' ? 'Amber' : 'Green'}</span><span style="flex-basis:100%">${t}</span></div></div>`).join('');
+  }
+
+  // weekly break rate
+  function weekly() {
+    const wk = {};
+    D.daily.forEach((r) => { const d = new Date(r.date + 'T12:00'); const m = new Date(d); m.setDate(d.getDate() - ((d.getDay() + 6) % 7)); const k = m.toISOString().slice(0, 10); (wk[k] ||= { t: 0, b: 0, months: new Set() }); wk[k].t += r.trades; wk[k].b += r.breaks; wk[k].months.add(r.month); });
+    const ks = Object.keys(wk).sort(), pts = ks.map((k) => ({ k, r: (100 * wk[k].b) / wk[k].t, on: per === 'Q' || wk[k].months.has(per) }));
+    const W = 760, H = 240, L = 36, R = 10, T = 12, B = 26, max = 1.6;
+    const x = (i) => L + (i * (W - L - R)) / (pts.length - 1), y = (v) => T + (1 - v / max) * (H - T - B);
+    let g = '';
+    [0, 0.4, 0.8, 1.2, 1.6].forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${C.line}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v.toFixed(1)}%</text>`; });
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(0.5)}" y2="${y(0.5)}" stroke="${C.muted}" stroke-width="2" stroke-dasharray="5 5"/>`;
+    const path = pts.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.r).toFixed(1)).join(' ');
+    g += `<path d="${path}" fill="none" stroke="${C.red}" stroke-width="2.5" stroke-linejoin="round" opacity="${per === 'Q' ? 1 : 0.35}"/>`;
+    pts.forEach((p, i) => { g += `<circle cx="${x(i)}" cy="${y(p.r)}" r="${p.on ? 4.5 : 3}" fill="${p.on ? C.red : C.bg2}" stroke="${C.red}" stroke-width="2"><title>Week of ${p.k}: ${p.r.toFixed(2)}%</title></circle>`; if (i % 2 === 0) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${new Date(p.k + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</text>`; });
+    document.getElementById('ch-br').innerHTML = svg(W, H, g, 'Weekly trade break rate against the 0.5% industry average');
+    const above = pts.filter((p) => p.on && p.r > 0.5).length, n = pts.filter((p) => p.on).length;
+    document.getElementById('sub-br').textContent = `${above} of ${n} weeks above the industry average. June improves after the order-entry fix (demo).`;
+  }
+
+  function causes() {
+    const c = {}; D.breaks.filter(inP).forEach((r) => (c[r.cause] = (c[r.cause] || 0) + 1));
+    const rows = Object.entries(c).sort((a, b) => b[1] - a[1]), max = Math.max(1, ...rows.map((r) => r[1]));
+    const W = 360, rh = 40, H = rows.length * rh;
+    let g = '';
+    rows.forEach(([k, v], i) => { const y0 = i * rh; g += `<text x="0" y="${y0 + 13}" style="fill:var(--ink-hi)">${k}</text><rect x="0" y="${y0 + 20}" width="${((W - 34) * v) / max}" height="12" fill="${i === 0 ? C.red : C.blue}"/><text x="${((W - 34) * v) / max + 6}" y="${y0 + 31}" style="fill:var(--ink-hi);font-weight:600">${v}</text>`; });
+    document.getElementById('ch-cause').innerHTML = rows.length ? svg(W, H, g, 'Trade breaks by cause') : '<p class="hint">No breaks in this period.</p>';
+  }
+
+  function mm() {
+    const a = D.mm.filter(inP).map((r) => r.h), n = a.length;
+    const mean = a.reduce((s, v) => s + v, 0) / (n || 1), p50 = pctl(a, 0.5), p90 = pctl(a, 0.9), late = a.filter((v) => v > 8).length;
+    document.getElementById('mm-stat').innerHTML = `<div><b>${fmt(mean)}h</b>Average</div><div><b>${fmt(p50)}h</b>Median</div><div><b class="s-${status(p90, 8, 12)}">${fmt(p90)}h</b>90th percentile</div><div><b>${late.toLocaleString()}</b>Over 8 hours</div>`;
+    const bins = new Array(13).fill(0); a.forEach((v) => bins[Math.min(12, Math.floor(v / 2))]++);
+    const W = 440, H = 170, L = 4, B = 22, max = Math.max(...bins), bw = (W - L) / bins.length;
+    let g = '';
+    bins.forEach((v, i) => { const h = ((H - B - 6) * v) / max; g += `<rect x="${L + i * bw + 1}" y="${H - B - h}" width="${bw - 3}" height="${h}" fill="${i >= 4 ? C.red : C.blue}"><title>${i * 2}–${i * 2 + 2}h: ${v}</title></rect>`; if (i % 2 === 0) g += `<text x="${L + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${i === 12 ? '24h+' : i * 2 + 'h'}</text>`; });
+    g += `<line x1="${L + 4 * bw - 1}" x2="${L + 4 * bw - 1}" y1="0" y2="${H - B}" stroke="${C.muted}" stroke-width="2" stroke-dasharray="4 4"/><text x="${L + 4 * bw + 4}" y="12">8h same-day line</text>`;
+    document.getElementById('ch-mm').innerHTML = svg(W, H, g, 'Histogram of money movement approval hours');
+  }
+
+  function aml() {
+    const a = D.aml.filter(inP);
+    const b = [['Under 24 hours', a.filter((r) => r.aging_bucket === '<24h').length, C.blue], ['1 to 5 business days', 0, C.amber], ['Over 5 business days', a.filter((r) => r.aging_bucket !== '<24h').length, C.red]];
+    const W = 320, H = 190, max = Math.max(1, ...b.map((x) => x[1])), bw = 78, gap = (W - 3 * bw) / 2;
+    let g = '';
+    b.forEach(([k, v, c], i) => { const h = ((H - 50) * v) / max, x0 = i * (bw + gap); g += `<rect x="${x0}" y="${H - 34 - h}" width="${bw}" height="${Math.max(h, 1)}" fill="${c}"/><text x="${x0 + bw / 2}" y="${H - 40 - h}" text-anchor="middle" style="fill:var(--ink-hi);font-weight:600;font-size:15px">${v}</text><text x="${x0 + bw / 2}" y="${H - 16}" text-anchor="middle">${k.split(' ').slice(0, 2).join(' ')}</text><text x="${x0 + bw / 2}" y="${H - 2}" text-anchor="middle">${k.split(' ').slice(2).join(' ')}</text>`; });
+    document.getElementById('ch-aml').innerHTML = svg(W, H, g, 'AML alerts by time to clear');
+  }
+
+  function funnel() {
+    const w = D.wires.filter(inP), h = w.filter((r) => r.held === 'Y').length, e = w.filter((r) => r.escalated_to_compliance === 'Y').length, max = Math.max(1, w.length);
+    const rows = [['Sent', w.length, C.blue], ['Held for review', h, C.amber], ['Escalated', e, C.red], ['Advisor told first', 0, C.green]];
+    document.getElementById('funnel').innerHTML = rows.map(([k, v, c]) => `<div class="fr"><span>${k}</span><div class="bar"><span style="width:${(100 * v) / max}%;background:${c}"></span></div><span class="n">${v}</span></div>`).join('') + '<p class="hint" style="margin:6px 0 0">Target from Q3: 100% of holds told within 30 minutes, no reason given.</p>';
+  }
+
+  // calendar
+  const cal = [
+    ['Jul 24', 'FOCUS Part IIA, Q2 (SEA 17a-5)', 'Filed Jul 30, 4 days late', 'red'],
+    ['Jun 15', 'Regulator request #2 (treat as FINRA 8210)', 'Answered Jun 18, late', 'red'],
+    ['Apr 30', 'Escheat report, state A: 1 account', 'Not actioned', 'red'],
+    ['May 1', 'Escheat report, state B: 1 account', 'Not actioned', 'red'],
+    ['Q2', 'Escheat reports, other states: 7 accounts', 'Filed on time', 'green'],
+    ['Oct 26', 'FOCUS Part IIA, Q3', 'Internal deadline Oct 14', 'amber'],
+  ];
+  document.getElementById('cal').innerHTML = cal.map(([d, t, s, c]) => `<li><span class="d">${d}</span><span>${t}</span><span class="s s-${c}">${s}</span></li>`).join('');
+
+  // queue
+  const PEOPLE = { 'Trade ops': ['JM', 205], Cashiering: ['AK', 150], AML: ['RS', 30], FINOP: ['TL', 265], Compliance: ['RD', 330] };
+  const agedAml = D.aml.filter((r) => r.aging_bucket !== '<24h');
+  const heldW = D.wires.filter((r) => r.held === 'Y').slice(0, 4);
+  let Q = [
+    ...agedAml.map((r, i) => ({ id: r.alert_id, what: r.scenario, q: 'AML', age: r.business_days_open + 'd', sla: -(r.business_days_open - 5) + 'd', st: 1, sev: 'red', rule: '31 CFR 1023.320, FINRA 3310' })),
+    ...heldW.map((r) => ({ id: r.wire_id, what: `Wire $${Number(r.amount_usd).toLocaleString()} to ${r.jurisdiction}`, q: 'AML', age: Math.round(r.hold_hours) + 'h', sla: Math.max(0, 24 - Math.round(r.hold_hours)) + 'h', st: r.escalated_to_compliance === 'Y' ? 2 : 1, sev: r.escalated_to_compliance === 'Y' ? 'red' : 'amber', rule: '31 CFR 1010.410(f), OFAC' })),
+    { id: 'TB-0101', what: 'Sold 500 AAPL, held 450 (#12345)', q: 'Trade ops', age: '3h', sla: '5h', st: 1, sev: 'red', rule: 'Reg SHO 200(g), 204' },
+    { id: 'BA-023', what: 'Block of 31 accounts not allocated', q: 'Trade ops', age: '6h', sla: '2h', st: 0, sev: 'amber', rule: 'FINRA 4515, allocation policy' },
+    { id: 'RCD-5523', what: 'Duplicate $40,000 remote deposit', q: 'Cashiering', age: '1h', sla: '3h', st: 0, sev: 'red', rule: 'SEA 17a-3, Reg CC 229.34(f)' },
+    { id: 'MM-3117', what: 'ACH out pending 14h, advisor chasing', q: 'Cashiering', age: '14h', sla: '−6h', st: 1, sev: 'amber', rule: 'Internal SLA' },
+    { id: 'REC-0412', what: 'Fidelity vs GL cash break, $18,420', q: 'FINOP', age: '6d', sla: '−1d', st: 1, sev: 'red', rule: 'SEA 17a-11(d) test' },
+    { id: 'ESC-A-02', what: 'Escheat: 2 accounts past state deadline', q: 'Compliance', age: '58d', sla: 'Past', st: 2, sev: 'red', rule: 'State UPA, SEA 17Ad-17' },
+    { id: 'LIT-78901', what: 'Legal hold on wrong account', q: 'Compliance', age: '2d', sla: '−1d', st: 2, sev: 'red', rule: 'FINRA 3110, 4530(b)' },
+  ];
+  const STEPS = ['New', 'Triage', 'Review', 'Escalated', 'Closed'];
+  let filt = 'All', sel = Q[0].id, log = {};
+  const stamp = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  function chips() {
+    const qs = ['All', ...Object.keys(PEOPLE)];
+    document.getElementById('chips').innerHTML = qs.map((k) => `<button type="button" data-q="${k}" aria-pressed="${k === filt}">${k}<b>${Q.filter((r) => (k === 'All' || r.q === k) && r.st < 4).length}</b></button>`).join('');
+    document.querySelectorAll('[data-q]').forEach((b) => b.addEventListener('click', () => { filt = b.dataset.q; render(); }));
+  }
+  function render() {
+    chips();
+    const rows = Q.filter((r) => filt === 'All' || r.q === filt);
+    document.getElementById('qbody').innerHTML = rows.map((r) => { const [ini, hue] = PEOPLE[r.q]; const late = /^[−-]|Past/.test(r.sla); return `<tr tabindex="0" data-id="${r.id}" aria-selected="${r.id === sel}"><td><b style="font-weight:600">${r.id}</b></td><td>${r.what}</td><td><span class="who"><span class="av" style="background:hsl(${hue} 60% 78%)">${ini}</span>${r.q}</span></td><td class="n">${r.age}</td><td class="n"><span class="sla ${r.st === 4 ? '' : late ? 's-red' : 's-' + r.sev}">${r.st === 4 ? '–' : r.sla}</span></td><td class="st">${STEPS[r.st]}</td></tr>`; }).join('');
+    document.querySelectorAll('#qbody tr').forEach((tr) => { const go = () => { sel = tr.dataset.id; render(); }; tr.addEventListener('click', go); tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); setTimeout(() => document.querySelector(`#qbody tr[data-id="${sel}"]`)?.focus(), 0); } }); });
+    detail();
+  }
+  function detail() {
+    const r = Q.find((x) => x.id === sel); if (!r) return;
+    const L = (log[r.id] ||= [[stamp(), 'Alert created by nightly Fidelity file']]);
+    document.getElementById('detail').innerHTML = `
+      <div><h2 style="margin:0 0 6px">Selected item</h2><h3 id="d-title">${r.id}</h3></div>
+      <dl class="kv"><dt>What</dt><dd>${r.what}</dd><dt>Owner queue</dt><dd>${r.q}</dd><dt>Rule</dt><dd>${r.rule}</dd><dt>Severity</dt><dd class="s-${r.sev}">${r.sev === 'red' ? 'Red' : 'Amber'}</dd></dl>
+      <div class="steps" aria-label="Workflow stage">${STEPS.map((s, i) => `<span class="${i < r.st ? 'done' : i === r.st ? 'now' : ''}">${s}</span>`).join('')}</div>
+      <div><label class="lbl" for="why">Rationale (required to escalate or close)</label><textarea id="why" placeholder="What you found, what you did, who approved…"></textarea></div>
+      <div class="acts">
+        <button type="button" id="adv" ${r.st >= 2 ? 'disabled' : ''}>Advance</button>
+        <button type="button" id="esc" ${r.st >= 3 ? 'disabled' : ''}>Escalate to CCO</button>
+        <button type="button" class="go" id="cls" ${r.st >= 4 ? 'disabled' : ''}>Close with evidence</button>
+      </div>
+      <p class="hint" id="dmsg" aria-live="polite">${r.q === 'AML' ? 'Advisor sees only "in standard review" and the next update time.' : 'Every step is time-stamped for the audit trail.'}</p>
+      <ul class="log" aria-label="Audit trail">${L.map(([t, m]) => `<li><b>${t}</b> ${m}</li>`).join('')}</ul>`;
+    const why = document.getElementById('why'), msg = document.getElementById('dmsg');
+    const need = () => { if (why.value.trim().length < 12) { msg.textContent = 'Write a rationale first. An escalation or close without one fails an exam.'; msg.className = 'hint s-red'; why.focus(); return false; } return true; };
+    document.getElementById('adv').onclick = () => { r.st++; L.unshift([stamp(), 'Moved to ' + STEPS[r.st]]); render(); };
+    document.getElementById('esc').onclick = () => { if (!need()) return; r.st = 3; L.unshift([stamp(), 'Escalated to CCO: ' + why.value.trim()]); render(); };
+    document.getElementById('cls').onclick = () => { if (!need()) return; r.st = 4; L.unshift([stamp(), 'Closed: ' + why.value.trim()]); render(); };
+  }
+
+  function all() { kris(); weekly(); causes(); mm(); aml(); funnel(); }
+  document.querySelectorAll('[data-per]').forEach((b) => b.addEventListener('click', () => { per = b.dataset.per; document.querySelectorAll('[data-per]').forEach((x) => x.setAttribute('aria-pressed', x === b)); all(); }));
+  all(); render();
+})();
+</script>
+<script type="module" src="assets/motion/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+break_id,date,month,cause,account,hours_to_resolve,resolved_by_settlement
+TB-0001,2026-04-01,2026-04,Corporate action not applied,FAKE-51083,6.0,Y
+TB-0002,2026-04-01,2026-04,Block allocation late,FAKE-74485,16.6,Y
+TB-0003,2026-04-02,2026-04,Block allocation late,FAKE-71994,15.7,Y
+TB-0004,2026-04-02,2026-04,Block allocation late,FAKE-97628,5.0,Y
+TB-0005,2026-04-06,2026-04,Position short at execution,FAKE-61171,6.1,Y
+TB-0006,2026-04-06,2026-04,Price or quantity mismatch,FAKE-11852,5.1,Y
+TB-0007,2026-04-07,2026-04,Settlement instruction missing,FAKE-55484,4.3,Y
+TB-0008,2026-04-07,2026-04,Block allocation late,FAKE-99495,1.7,Y
+TB-0009,2026-04-08,2026-04,Wrong account on order,FAKE-71155,3.9,Y
+TB-0010,2026-04-08,2026-04,Block allocation late,FAKE-78106,7.6,Y
+TB-0011,2026-04-09,2026-04,Position short at execution,FAKE-40582,6.5,Y
+TB-0012,2026-04-09,2026-04,Block allocation late,FAKE-35623,2.1,Y
+TB-0013,2026-04-10,2026-04,Block allocation late,FAKE-16316,1.6,Y
+TB-0014,2026-04-10,2026-04,Wrong account on order,FAKE-98949,7.2,Y
+TB-0015,2026-04-13,2026-04,Price or quantity mismatch,FAKE-77744,1.9,Y
+TB-0016,2026-04-13,2026-04,Price or quantity mismatch,FAKE-34380,1.4,Y
+TB-0017,2026-04-14,2026-04,Wrong account on order,FAKE-20309,4.3,Y
+TB-0018,2026-04-14,2026-04,Wrong account on order,FAKE-70806,3.1,Y
+TB-0019,2026-04-15,2026-04,Block allocation late,FAKE-71302,8.8,Y
+TB-0020,2026-04-15,2026-04,Position short at execution,FAKE-79107,5.2,Y
+TB-0021,2026-04-16,2026-04,Price or quantity mismatch,FAKE-22205,8.5,Y
+TB-0022,2026-04-16,2026-04,Price or quantity mismatch,FAKE-97870,6.7,Y
+TB-0023,2026-04-17,2026-04,Position short at execution,FAKE-80566,2.8,Y
+TB-0024,2026-04-17,2026-04,Position short at execution,FAKE-84454,6.1,Y
+TB-0025,2026-04-20,2026-04,Corporate action not applied,FAKE-97858,6.0,Y
+TB-0026,2026-04-20,2026-04,Block allocation late,FAKE-67154,2.6,Y
+TB-0027,2026-04-21,2026-04,Position short at execution,FAKE-34313,12.4,Y
+TB-0028,2026-04-21,2026-04,Block allocation late,FAKE-87084,2.5,Y
+TB-0029,2026-04-22,2026-04,Price or quantity mismatch,FAKE-44191,3.4,Y
+TB-0030,2026-04-22,2026-04,Position short at execution,FAKE-12022,9.5,Y
+TB-0031,2026-04-23,2026-04,Position short at execution,FAKE-22303,3.1,Y
+TB-0032,2026-04-23,2026-04,Block allocation late,FAKE-55915,20.9,N
+TB-0033,2026-04-24,2026-04,Wrong account on order,FAKE-90628,4.3,Y
+TB-0034,2026-04-24,2026-04,Position short at execution,FAKE-87864,3.7,Y
+TB-0035,2026-04-27,2026-04,Wrong account on order,FAKE-99312,24.9,N
+TB-0036,2026-04-27,2026-04,Settlement instruction missing,FAKE-56703,3.3,Y
+TB-0037,2026-04-28,2026-04,Position short at execution,FAKE-26032,3.3,Y
+TB-0038,2026-04-28,2026-04,Position short at execution,FAKE-12656,3.9,Y
+TB-0039,2026-04-29,2026-04,Block allocation late,FAKE-24758,3.2,Y
+TB-0040,2026-04-29,2026-04,Position short at execution,FAKE-95956,5.3,Y
+TB-0041,2026-04-30,2026-04,Wrong account on order,FAKE-64433,4.5,Y
+TB-0042,2026-04-30,2026-04,Wrong account on order,FAKE-38778,2.9,Y
+TB-0043,2026-05-01,2026-05,Corporate action not applied,FAKE-82731,8.7,Y
+TB-0044,2026-05-01,2026-05,Wrong account on order,FAKE-13062,3.5,Y
+TB-0045,2026-05-04,2026-05,Position short at execution,FAKE-51254,5.4,Y
+TB-0046,2026-05-04,2026-05,Position short at execution,FAKE-33501,5.9,Y
+TB-0047,2026-05-04,2026-05,Block allocation late,FAKE-92969,5.1,Y
+TB-0048,2026-05-05,2026-05,Block allocation late,FAKE-11495,6.7,Y
+TB-0049,2026-05-05,2026-05,Block allocation late,FAKE-39076,3.6,Y
+TB-0050,2026-05-05,2026-05,Block allocation late,FAKE-57176,11.1,Y
+TB-0051,2026-05-06,2026-05,Settlement instruction missing,FAKE-57069,3.9,Y
+TB-0052,2026-05-06,2026-05,Wrong account on order,FAKE-98264,3.8,Y
+TB-0053,2026-05-07,2026-05,Block allocation late,FAKE-30156,1.8,Y
+TB-0054,2026-05-07,2026-05,Block allocation late,FAKE-78580,2.0,Y
+TB-0055,2026-05-07,2026-05,Corporate action not applied,FAKE-21037,13.2,Y
+TB-0056,2026-05-08,2026-05,Position short at execution,FAKE-23205,5.3,Y
+TB-0057,2026-05-08,2026-05,Settlement instruction missing,FAKE-85055,13.5,Y
+TB-0058,2026-05-11,2026-05,Position short at execution,FAKE-77711,3.8,Y
+TB-0059,2026-05-11,2026-05,Price or quantity mismatch,FAKE-50687,3.7,Y
+TB-0060,2026-05-11,2026-05,Position short at execution,FAKE-31261,8.4,Y
+TB-0061,2026-05-12,2026-05,Price or quantity mismatch,FAKE-27564,3.5,Y
+TB-0062,2026-05-12,2026-05,Settlement instruction missing,FAKE-11238,1.1,Y
+TB-0063,2026-05-13,2026-05,Price or quantity mismatch,FAKE-80434,2.3,Y
+TB-0064,2026-05-14,2026-05,Position short at execution,FAKE-80660,5.1,Y
+TB-0065,2026-05-14,2026-05,Position short at execution,FAKE-10261,9.8,Y
+TB-0066,2026-05-15,2026-05,Price or quantity mismatch,FAKE-79747,2.3,Y
+TB-0067,2026-05-15,2026-05,Position short at execution,FAKE-52767,5.8,Y
+TB-0068,2026-05-18,2026-05,Block allocation late,FAKE-94875,3.4,Y
+TB-0069,2026-05-18,2026-05,Position short at execution,FAKE-82822,4.7,Y
+TB-0070,2026-05-19,2026-05,Block allocation late,FAKE-69760,17.2,Y
+TB-0071,2026-05-19,2026-05,Settlement instruction missing,FAKE-21516,4.1,Y
+TB-0072,2026-05-20,2026-05,Price or quantity mismatch,FAKE-96783,7.8,Y
+TB-0073,2026-05-20,2026-05,Position short at execution,FAKE-53478,3.2,Y
+TB-0074,2026-05-21,2026-05,Wrong account on order,FAKE-74643,20.0,Y
+TB-0075,2026-05-21,2026-05,Wrong account on order,FAKE-55684,1.7,Y
+TB-0076,2026-05-22,2026-05,Corporate action not applied,FAKE-87314,1.7,Y
+TB-0077,2026-05-26,2026-05,Wrong account on order,FAKE-96093,1.0,Y
+TB-0078,2026-05-26,2026-05,Corporate action not applied,FAKE-25446,4.4,Y
+TB-0079,2026-05-27,2026-05,Wrong account on order,FAKE-29052,10.4,Y
+TB-0080,2026-05-28,2026-05,Block allocation late,FAKE-28804,3.3,Y
+TB-0081,2026-05-28,2026-05,Block allocation late,FAKE-70039,2.6,Y
+TB-0082,2026-05-29,2026-05,Block allocation late,FAKE-53144,3.8,Y
+TB-0083,2026-05-29,2026-05,Block allocation late,FAKE-74839,2.7,Y
+TB-0084,2026-06-01,2026-06,Settlement instruction missing,FAKE-37513,7.7,Y
+TB-0085,2026-06-02,2026-06,Wrong account on order,FAKE-62397,6.0,Y
+TB-0086,2026-06-03,2026-06,Corporate action not applied,FAKE-94458,3.2,Y
+TB-0087,2026-06-04,2026-06,Block allocation late,FAKE-11540,11.2,Y
+TB-0088,2026-06-05,2026-06,Position short at execution,FAKE-45211,3.4,Y
+TB-0089,2026-06-08,2026-06,Wrong account on order,FAKE-77494,24.7,N
+TB-0090,2026-06-09,2026-06,Position short at execution,FAKE-34596,5.9,Y
+TB-0091,2026-06-10,2026-06,Block allocation late,FAKE-70747,3.8,Y
+TB-0092,2026-06-11,2026-06,Position short at execution,FAKE-21047,10.0,Y
+TB-0093,2026-06-12,2026-06,Block allocation late,FAKE-83289,11.0,Y
+TB-0094,2026-06-15,2026-06,Position short at execution,FAKE-77295,1.5,Y
+TB-0095,2026-06-16,2026-06,Settlement instruction missing,FAKE-55536,6.6,Y
+TB-0096,2026-06-17,2026-06,Wrong account on order,FAKE-52864,4.7,Y
+TB-0097,2026-06-23,2026-06,Price or quantity mismatch,FAKE-12853,1.7,Y
+TB-0098,2026-06-24,2026-06,Block allocation late,FAKE-71094,1.9,Y
+TB-0099,2026-06-26,2026-06,Position short at execution,FAKE-62419,0.9,Y
+TB-0100,2026-06-30,2026-06,Wrong account on order,FAKE-18461,8.4,Y

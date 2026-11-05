@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brokerage Ops Take-Home · Rahul Das</title>
+<meta name="description" content="Four broker-dealer exceptions worked against SEC and FINRA rules, with a live demo for each, and a Q2 2026 back-office review with a monitoring dashboard. All data is fake.">
+<meta name="author" content="Rahul Das">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://rahul-das-456.github.io/Savy/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .sheet {
+    width: min(var(--sheet), 100% - 2 * var(--m)); margin: clamp(72px, 9vw, 140px) auto 0;
+    background: var(--paper); color: var(--paper-ink); color-scheme: light;
+    padding: clamp(28px, 4.5vw, 72px) clamp(20px, 4.5vw, 72px);
+    -webkit-mask: radial-gradient(circle 7px at 50% 0, #0000 98%, #000) 0 0 / 18px 100% repeat-x; /* taste-skill-ignore: scalloped paper edge, same as site.css */
+            mask: radial-gradient(circle 7px at 50% 0, #0000 98%, #000) 0 0 / 18px 100% repeat-x; /* taste-skill-ignore */
+  }
+  .desk { width: min(var(--sheet), 100% - 2 * var(--m)); margin: clamp(72px, 9vw, 140px) auto 0; }
+  .sheet h2, .desk h2 { font-size: var(--step-head); margin: 0 0 0.35em; max-width: 20ch; }
+  .sheet h3 { font-size: var(--step-lead); letter-spacing: -0.02em !important; margin: 0 0 0.5em; }
+  .sheet p, .sheet li, .case__brief p { max-width: 66ch; line-height: 1.55; }
+  .lede { font-size: var(--step-lead); line-height: 1.3; max-width: 56ch; margin: 0 0 clamp(28px, 4vw, 48px); }
+  .desk .lede { color: var(--muted); }
+  .sheet .lede { color: var(--paper-muted); }
+  .sheet a { color: var(--paper-ink); text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--accent-deep); }
+  .desk a { color: var(--ink-hi); text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--accent); }
+
+  /* assumptions */
+  .assume { columns: 2 340px; column-gap: clamp(28px, 4vw, 64px); margin: 0; padding: 0; list-style: none; }
+  .assume li { break-inside: avoid; padding: 0 0 18px; max-width: none; }
+
+  /* exception switcher */
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+  .tab {
+    flex: 1 1 200px; text-align: left; font: inherit; font-weight: 600; font-size: var(--step-body); line-height: 1.2;
+    background: var(--surface); color: var(--ink-hi); border: 0; padding: 16px 20px 18px; cursor: pointer; min-height: 72px;
+    transition: background-color var(--t-hover) var(--ease-out), transform var(--t-press) var(--ease-out);
+  }
+  .tab span { display: block; font-weight: 400; font-size: var(--step-small); color: var(--muted); margin-top: 4px; }
+  .tab:hover { background: var(--surface-2); }
+  .tab:active { transform: scale(0.98); }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+  .tab[aria-selected="true"] span { color: var(--accent-ink); }
+  .case { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 6px; }
+  .case[hidden] { display: none; }
+  .case__brief { background: var(--paper); color: var(--paper-ink); padding: clamp(24px, 3vw, 44px); color-scheme: light; }
+  .case__brief h3 { font-size: var(--step-head); letter-spacing: -0.035em !important; margin: 0 0 12px; }
+  .facts { margin: 0 0 22px; padding: 14px 18px; background: var(--paper-2); }
+  .facts p { margin: 0; }
+  .case__brief h4 { font-size: var(--step-body); margin: 22px 0 8px; font-weight: 600; }
+  .case__brief ol, .case__brief ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+  .rules { list-style: none; padding: 0 !important; gap: 4px !important; }
+  .rules li { display: grid; grid-template-columns: 9.5em 1fr; gap: 12px; padding: 8px 0; }
+  .rules cite { font-style: normal; font-weight: 600; color: var(--accent-deep); }
+  .sev { display: inline-block; font-weight: 600; padding: 4px 10px; background: var(--paper-ink); color: var(--paper); margin: 0 0 16px; }
+  .sev--red { background: var(--accent-deep); }
+
+  /* live demos: interface fragments */
+  .demo { align-self: start; position: sticky; top: 84px; background: var(--surface); color: var(--ink-hi); padding: clamp(20px, 2.6vw, 36px); display: grid; gap: 18px; align-content: start; }
+  .demo .demo__t { margin: 0; font-size: var(--step-lead); font-weight: 600; letter-spacing: -0.02em; }
+  .demo .note { font-size: var(--step-small); color: var(--muted); margin: 0; }
+  .panel { background: var(--bg); padding: 16px 18px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 6px 0; }
+  .k { color: var(--muted); }
+  .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .big { font-size: clamp(2rem, 1.2rem + 2.4vw, 3.25rem); font-weight: 600; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .red { color: var(--accent); }
+  .green { color: var(--bid); }
+  .ctl { display: flex; flex-wrap: wrap; gap: 6px; }
+  .b {
+    font: inherit; font-weight: 600; border: 0; cursor: pointer; min-height: 44px; padding: 0 16px;
+    background: var(--surface-2); color: var(--ink-hi);
+    transition: background-color var(--t-hover) var(--ease-out), transform var(--t-press) var(--ease-out);
+  }
+  .b:hover { background: #2d3b66; }
+  .b:active { transform: scale(0.97); }
+  .b[aria-pressed="true"], .b--go { background: var(--accent); color: var(--accent-ink); }
+  .b--go:hover { background: #ff7466; }
+  .b:disabled { opacity: 0.45; cursor: not-allowed; }
+  .out { padding: 14px 16px; background: var(--bg); min-height: 3.2em; line-height: 1.5; }
+  .out b { color: var(--ink-hi); }
+  .out { position: relative; padding-left: 22px; }
+  .out::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--surface-2); }
+  .out.is-bad::before { background: var(--accent); }
+  .out.is-ok::before { background: var(--bid); }
+  .out.is-warn::before { background: #f2b84b; }
+  label.f { display: grid; gap: 6px; font-size: var(--step-small); color: var(--muted); }
+  input[type=text], select {
+    font: inherit; font-size: var(--step-body); color: var(--ink-hi); background: var(--bg); border: 2px solid #33406a; padding: 10px 12px; min-height: 44px; border-radius: 0;
+  }
+  input[type=text]:focus { border-color: var(--accent); outline: none; }
+  .tl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .tl div { background: var(--bg); padding: 10px 12px; font-size: var(--step-small); min-height: 84px; }
+  .tl b { display: block; font-size: var(--step-body); }
+  .tl .on { background: var(--accent); color: var(--accent-ink); }
+  .tl .ok { background: var(--bid); color: var(--accent-ink); }
+  .q { width: 100%; border-collapse: collapse; font-size: var(--step-small) !important; }
+  .q th, .q td { text-align: left; padding: 8px 6px; color: var(--ink-hi) !important; border-bottom: 1px solid #2a3558 !important; }
+  .q th { color: var(--muted) !important; border-bottom: 2px solid #33406a !important; }
+  .q td.n, .q th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .q tr.hit td { background: rgba(255, 90, 74, 0.16); }
+  .checks { display: grid; gap: 4px; }
+  .checks label { display: flex; gap: 12px; align-items: flex-start; background: var(--bg); padding: 10px 12px; cursor: pointer; line-height: 1.35; }
+  .checks input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; margin-top: 2px; }
+  .acct { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .acct > div { background: var(--bg); padding: 14px 16px; }
+  .acct .num { font-size: clamp(1.8rem, 1rem + 2vw, 2.6rem); font-weight: 600; letter-spacing: 0.02em !important; font-variant-numeric: tabular-nums; }
+  .acct .num mark { background: var(--accent); color: var(--accent-ink); padding: 0 2px; }
+  .msg { background: var(--paper); color: var(--paper-ink); padding: 14px 16px; line-height: 1.5; }
+  .msg b { display: block; font-size: var(--step-small); color: var(--paper-muted); margin-bottom: 4px; font-weight: 500; }
+
+  /* prompt 2 */
+  .concerns { display: grid; gap: 6px; counter-reset: c; }
+  .concern { display: grid; grid-template-columns: minmax(150px, 0.38fr) 1fr; gap: clamp(16px, 3vw, 40px); background: var(--paper-2); padding: clamp(18px, 2.4vw, 28px); align-items: start; }
+  .concern .fig { margin: 0; font-size: clamp(2.4rem, 1.2rem + 3.4vw, 4.5rem); font-weight: 600; letter-spacing: -0.05em; line-height: 0.9; font-variant-numeric: tabular-nums; color: var(--accent-deep); }
+  .concern .fig-x { display: block; font-size: var(--step-small); letter-spacing: 0; font-weight: 500; color: var(--paper-muted); margin-top: 8px; line-height: 1.3; }
+  .concern h3 { margin: 0 0 6px; }
+  .concern p { margin: 0 0 8px; }
+  .concern .why { color: var(--paper-ink); }
+  .concern cite { font-style: normal; font-weight: 600; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .two > div { background: var(--paper-2); padding: clamp(20px, 2.6vw, 32px); }
+  .two h3 { margin-top: 0; }
+  .two ul, .two ol { padding-left: 1.2em; margin: 0; display: grid; gap: 8px; }
+  .rc { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 6px; }
+  .rc > div { background: var(--paper-2); padding: 20px 22px; }
+  .rc h3 { font-size: var(--step-body); margin: 0 0 10px; }
+  .rc ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; }
+  .kri { width: 100%; min-width: 820px; border-collapse: collapse; }
+  .kri th, .kri td { text-align: left; padding: 12px 10px; vertical-align: top; font-size: var(--step-small) !important; line-height: 1.4; }
+  .kri td:first-child { font-weight: 600; }
+  .rag { display: inline-block; min-width: 1.4em; font-weight: 600; }
+  .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .flow li { background: var(--paper-ink); color: var(--paper); padding: 16px; max-width: none; }
+  .flow b { display: block; font-size: var(--step-lead); letter-spacing: -0.02em; margin-bottom: 6px; color: var(--paper); }
+  .flow li:nth-child(4) { background: var(--accent-deep); }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 28px; }
+  .cta .link { color: var(--ink-hi); }
+  .dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .dl a { overflow-wrap: anywhere; display: block; background: var(--surface); color: var(--ink-hi); padding: 16px 18px; text-decoration: none; font-weight: 600; transition: background-color var(--t-hover) var(--ease-out); }
+  .dl a:hover { background: var(--surface-2); }
+  .dl span { display: block; font-weight: 400; font-size: var(--step-small); color: var(--muted); margin-top: 4px; }
+  .back__credit { max-width: 75ch; }
+  .plate { width: min(var(--sheet), 100% - 2 * var(--m)); margin: clamp(72px, 9vw, 140px) auto 0; }
+  .plate img, .plate video { display: block; width: 100%; aspect-ratio: 21 / 9; object-fit: cover; filter: grayscale(1) contrast(1.08); background: var(--surface); }
+  .plate figcaption { margin-top: 10px; color: var(--muted); font-size: var(--step-small); }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .duo .plate { width: auto; margin: 0; }
+  .plate--tall img { aspect-ratio: 4 / 3; }
+  @media (max-width: 700px) { .plate img, .plate video { aspect-ratio: 4 / 3; } .duo { grid-template-columns: 1fr; } }
+  .steps { margin: 18px 0 0; padding-left: 1.2em; display: grid; gap: 8px; color: var(--ink-hi); max-width: 80ch; }
+
+  @media (max-width: 820px) {
+    .kri { min-width: 0; }
+    .kri thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .kri, .kri tbody, .kri tr, .kri td { display: block; width: 100%; }
+    .kri tr { background: var(--paper-2); padding: 14px 16px; margin-bottom: 6px; }
+    .kri td { border: 0 !important; padding: 3px 0; }
+    .kri td:first-child { font-size: var(--step-body) !important; padding-bottom: 6px; }
+    .kri td[data-h]::before { content: attr(data-h) ": "; color: var(--paper-muted); font-weight: 500; }
+  }
+  @media (max-width: 1000px) { .case { grid-template-columns: 1fr; } .demo { position: static; } .flow { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) {
+    .concern, .two { grid-template-columns: 1fr; }
+    .concerns { gap: 40px; }
+    .rules li { grid-template-columns: 1fr; gap: 2px; }
+    .tl { grid-template-columns: 1fr 1fr; }
+    .flow { grid-template-columns: 1fr 1fr; }
+    .tab { flex-basis: calc(50% - 6px); }
+  }
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<header class="bar">
+  <a class="bar__mark" href="./index.html">Rahul Das</a>
+  <nav class="bar__links" aria-label="This take-home">
+    <a href="#exceptions">Exceptions</a>
+    <a href="#review">Q2 review</a>
+    <a href="#tableau">Tableau files</a>
+  </nav>
+  <a class="bar__action" href="./dashboard.html">Dashboard</a>
+</header>
+
+<main id="main">
+<section class="exhibit" aria-labelledby="page-title">
+  <div class="exhibit__room"><img src="assets/thomas-edison-stock-ticker-nmah-jn2014-3625.jpg" alt="" fetchpriority="high"></div>
+  <div class="exhibit__card">
+    <h1 id="page-title" class="exhibit__title">Brokerage ops take-home</h1>
+    <p class="exhibit__sub">Four exceptions worked against the SEC and FINRA rulebooks, each with a working demo, and a Q2 2026 back-office review with a live monitoring dashboard.</p>
+    <dl class="exhibit__fields">
+      <dt>For</dt><dd>Savvy, Strategy and Operations Manager, Brokerage</dd>
+      <dt>From</dt><dd>Rahul Das. Ex-FINRA analyst, ex-Cboe cross-market investigator</dd>
+      <dt>Data</dt><dd>Every account, name, number and row on this page is fake</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="sheet" aria-labelledby="assume-h">
+  <h2 id="assume-h">Assumptions I made</h2>
+  <p class="lede">The brief invites assumptions. These are mine; each answer below depends on them.</p>
+  <ul class="assume">
+    <li><b>Savvy is an introducing firm.</b> Fidelity (NFS) clears and carries on a fully disclosed basis under a FINRA Rule 4311 agreement. Fidelity runs the reserve formula; Savvy owns supervision, books it keeps, and its own FOCUS Part IIA.</li>
+    <li><b>Settlement is T+1</b> under Exchange Act Rule 15c6-1, effective May 28, 2024.</li>
+    <li><b>Advisors are dually registered</b> or work for Savvy's RIA, so block trades follow the adviser's allocation policy as well as broker-dealer rules.</li>
+    <li><b>"Litigation hold" in exception 4 means a court or legal order restricting trading</b>, not only a document-preservation hold.</li>
+    <li><b>The FINRA/audit request answered late</b> could be a Rule 8210 request. I treat it as one until Legal confirms otherwise.</li>
+    <li><b>Today's time zone is Central.</b> Fedwire Funds Service closes at 7:00 p.m. ET (6:00 p.m. CT); Fidelity's client cut-off is earlier.</li>
+  </ul>
+</section>
+
+<figure class="plate">
+  <img src="assets/in-the-wheat-pit-of-the-board.jpg" width="1536" height="1169" alt="Traders crowded into the wheat pit at the Chicago Board of Trade, about 1920" loading="lazy">
+  <figcaption>Every exception starts on a floor like this one. The wheat pit, Chicago Board of Trade, about 1920.</figcaption>
+</figure>
+
+<section class="desk" id="exceptions" aria-labelledby="ex-h">
+  <h2 id="ex-h">Prompt 1: four exceptions</h2>
+  <p class="lede">Each one: what's wrong, the rules it touches, what I'd do in order, and how I'd stop it happening again. The dark panel is a working demo with fake data.</p>
+
+  <div class="tabs" role="tablist" aria-label="Exceptions">
+    <button class="tab" role="tab" id="t1" aria-controls="p1" aria-selected="true">Trade break<span>Sold 500 AAPL, held 450</span></button>
+    <button class="tab" role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1">Duplicate deposit<span>$40,000 check credited twice</span></button>
+    <button class="tab" role="tab" id="t3" aria-controls="p3" aria-selected="false" tabindex="-1">Wire held for AML<span>$65,000, new jurisdiction</span></button>
+    <button class="tab" role="tab" id="t4" aria-controls="p4" aria-selected="false" tabindex="-1">Wrong account restricted<span>78901 vs 78091</span></button>
+  </div>
+
+  <!-- 1 -->
+  <div class="case" role="tabpanel" id="p1" aria-labelledby="t1">
+    <article class="case__brief">
+      <h3>Trade break: 50 shares oversold</h3>
+      <p class="sev sev--red">Fix today, before T+1 settlement</p>
+      <div class="facts"><p>Account #12345 sold 500 AAPL at Fidelity. It held 450. Settlement is tomorrow.</p></div>
+      <h4>What's wrong</h4>
+      <p>The 50 extra shares were a short sale marked long, with no locate. Unless we act today, Fidelity fails to deliver 50 shares on T+1.</p>
+      <h4>Rules</h4>
+      <ul class="rules">
+        <li><cite>Reg SHO 200(g)(1)</cite><span>"Long" requires the seller to own the shares and have them, or expect them, by settlement. The 50 shares break this: a mismarked order.</span></li>
+        <li><cite>Reg SHO 203(b)(1)</cite><span>No locate was done for the short portion.</span></li>
+        <li><cite>Reg SHO 204(a)</cite><span>Treated as a short, a fail must close out by the open of the next settlement day (T+2).</span></li>
+        <li><cite>SEA 15c3-3(m)</cite><span>A customer sell not delivered within 10 business days after settlement must be bought in.</span></li>
+        <li><cite>SEA 17a-3(a)(6), FINRA 4511, 4515</cite><span>Every cancel, rebill or account change goes on the order memo, approved and documented.</span></li>
+        <li><cite>FINRA 3110, 4311</cite><span>A supervisory gap: no pre-trade position check. Under the clearing agreement, Savvy owns order entry.</span></li>
+      </ul>
+      <h4>Do now, in order</h4>
+      <ol>
+        <li>Call Fidelity trade support. Confirm the 450 shares are free and unpledged, and the trade as booked.</li>
+        <li>Find the cause: a pending transfer in, an unsettled buy, or advisor error. If shares arrive by T+1, document it and stop.</li>
+        <li>If not, buy 50 AAPL today in Savvy's error account. The account delivers 500 on T+1 and nothing fails.</li>
+        <li>The firm absorbs any loss; the client gets nothing worse than an order for 450. Get principal sign-off on the cancel/rebill under 4515.</li>
+        <li>Correct the CAT record and flag the mismarking in the Reg SHO exception log.</li>
+      </ol>
+      <h4>Prevent it</h4>
+      <p>Hard block in order entry: sell quantity cannot exceed settled plus pending-settled shares. Daily report of overrides to the supervising principal.</p>
+    </article>
+    <div class="demo" data-ui>
+      <p class="demo__t">Settlement ticket</p>
+      <div class="panel">
+        <div class="row"><span class="k">Account #12345 holds</span><span class="v">450 AAPL</span></div>
+        <div class="row"><span class="k">Sell executed at $228.40</span><span class="v">500 AAPL</span></div>
+        <div class="row"><span class="k">Short to deliver on T+1</span><span class="v red">50 AAPL</span></div>
+      </div>
+      <div class="ctl" role="group" aria-label="Choose a fix">
+        <button class="b" type="button" data-fix="buy" aria-pressed="true">Buy 50 in error account today</button>
+        <button class="b" type="button" data-fix="wait" aria-pressed="false">Wait and see</button>
+      </div>
+      <label class="f" for="buyin">Price paid for the 50 shares: <output id="buyinOut">$230.10</output>
+        <input id="buyin" type="range" min="220" max="238" step="0.1" value="230.1">
+      </label>
+      <div class="tl" id="tl1" aria-live="polite"></div>
+      <div class="out" id="out1" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="case" role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+    <article class="case__brief">
+      <h3>Duplicate remote deposit</h3>
+      <p class="sev sev--red">Fix today, before anyone withdraws it</p>
+      <div class="facts"><p>A $40,000 check was scanned twice, 15 minutes apart. Both entries processed. The account shows $80,000.</p></div>
+      <h4>What's wrong</h4>
+      <p>$40,000 of the credit does not exist. Our books, the client's statement and Fidelity's reserve figures are all wrong until we reverse it. Its second presentment will be returned by the paying bank.</p>
+      <h4>Rules</h4>
+      <ul class="rules">
+        <li><cite>SEA 17a-3(a)(1), (a)(3)</cite><span>The blotter and the customer ledger must show true receipts. One is fictitious.</span></li>
+        <li><cite>SEA 15c3-3(e)</cite><span>The phantom credit flows into the customer reserve computation at the carrying firm.</span></li>
+        <li><cite>Reg CC 12 CFR 229.34(f)</cite><span>The bank that accepted a remote deposit indemnifies against duplicate presentment of the same item.</span></li>
+        <li><cite>FINRA 2231</cite><span>The client's statement must be accurate. Correct before statement cut.</span></li>
+        <li><cite>FINRA 3310</cite><span>Duplicate presentment is a known fraud pattern. Rule it out, don't assume error.</span></li>
+        <li><cite>FINRA 3110, 4511</cite><span>The RCD queue has no duplicate control. That's a supervisory finding.</span></li>
+      </ul>
+      <h4>Do now, in order</h4>
+      <ol>
+        <li>Restrict withdrawal of the duplicate $40,000 at Fidelity right now.</li>
+        <li>Match the two images: routing, account, check number, amount, date. Confirm one physical check.</li>
+        <li>Reverse the second credit by journal, maker and checker, with both image IDs on the entry.</li>
+        <li>Tell the advisor, then the client: a scanning duplicate, corrected, no action needed.</li>
+        <li>Search the quarter's RCD log for other duplicates. One means the control is missing for all.</li>
+      </ol>
+      <h4>Prevent it</h4>
+      <p>Hash every item on MICR line plus amount; reject a second scan for 90 days. Hold RCD funds until the item clears.</p>
+    </article>
+    <div class="demo" data-ui>
+      <p class="demo__t">Remote deposit queue</p>
+      <table class="q" id="rcd">
+        <thead><tr><th>Item</th><th>Scanned</th><th>Routing / acct</th><th>Check</th><th class="n">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>RCD-5518</td><td>10:02</td><td>••4012 / ••8831</td><td>1047</td><td class="n">$40,000.00</td></tr>
+          <tr><td>RCD-5519</td><td>10:09</td><td>••7730 / ••2054</td><td>311</td><td class="n">$2,150.00</td></tr>
+          <tr><td>RCD-5523</td><td>10:17</td><td>••4012 / ••8831</td><td>1047</td><td class="n">$40,000.00</td></tr>
+        </tbody>
+      </table>
+      <div class="panel">
+        <div class="row"><span class="k">Client cash balance</span><span class="v big" id="bal">$80,000</span></div>
+        <div class="row"><span class="k">Available to withdraw</span><span class="v" id="avail">$80,000</span></div>
+      </div>
+      <div class="ctl">
+        <button class="b b--go" type="button" id="dupScan">Run duplicate check</button>
+        <button class="b" type="button" id="dupHold" disabled>Restrict $40,000</button>
+        <button class="b" type="button" id="dupRev" disabled>Reverse RCD-5523</button>
+      </div>
+      <div class="out" id="out2" aria-live="polite">Queue shows 3 items processed. No duplicate control ran.</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="case" role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+    <article class="case__brief">
+      <h3>International wire on AML hold</h3>
+      <p class="sev">Review within the hour. Release only on facts.</p>
+      <div class="facts"><p>$65,000 outbound to a jurisdiction new to this client. Flagged and held. The advisor wants it out today. I haven't read the alert yet.</p></div>
+      <h4>What's wrong</h4>
+      <p>Nothing yet. Maybe nothing at all. The risk is releasing it to calm the advisor before anyone reads the alert. Advisor pressure plays no part in the decision.</p>
+      <h4>Rules</h4>
+      <ul class="rules">
+        <li><cite>FINRA 3310</cite><span>The AML program must detect and report suspicious activity independently of the business line.</span></li>
+        <li><cite>31 CFR 1023.320</cite><span>SAR for $5,000+ if suspicious. File within 30 days of initial detection. (e): never tell the client or advisor a SAR is considered.</span></li>
+        <li><cite>31 CFR 501.603, .604</cite><span>OFAC: block or reject on a sanctions match; report to OFAC within 10 business days.</span></li>
+        <li><cite>31 CFR 1010.410(f)</cite><span>Travel Rule: wires of $3,000+ carry full originator and beneficiary data.</span></li>
+        <li><cite>31 CFR 1010.230, FINRA 2090</cite><span>CDD and know-your-customer: does this fit the client's profile and source of funds?</span></li>
+        <li><cite>FINRA 2165, 4512</cite><span>If the client is 65+ and exploitation is suspected: hold 15 business days, +10, +30 more if reported to a state agency or court. Call the trusted contact.</span></li>
+      </ul>
+      <h4>Do now, in order</h4>
+      <ol>
+        <li>Reply to the advisor in 5 minutes: under review, update by a set time. No reason given.</li>
+        <li>Read the alert. Screen beneficiary, bank and country against OFAC.</li>
+        <li>Call the client on the number on file, not one given in the request. Confirm the wire, purpose and beneficiary.</li>
+        <li>Check for account takeover: recent email, phone or address changes, new device logins.</li>
+        <li>Decide and write it down: release, request documents, or escalate to the AML officer.</li>
+      </ol>
+      <h4>Prevent the fire drill</h4>
+      <p>An international wire intake form (purpose, relationship, source of funds) and an automatic status message to the advisor once a hold starts.</p>
+    </article>
+    <div class="demo" data-ui>
+      <p class="demo__t">Alert review: WR-20931, $65,000</p>
+      <div class="panel">
+        <div class="row"><span class="k">Fidelity wire cut-off</span><span class="v" id="cutoff">4:00 p.m. CT</span></div>
+        <div class="row"><span class="k">Time left today</span><span class="v" id="left">–</span></div>
+      </div>
+      <fieldset class="checks" style="border:0;padding:0;margin:0">
+        <legend class="note" style="margin-bottom:8px">Tick what the review found</legend>
+        <label><input type="checkbox" data-f="ofac"> Beneficiary or bank matches an OFAC list</label>
+        <label><input type="checkbox" data-f="fatf"> Country is on the FATF high-risk or monitored list</label>
+        <label><input type="checkbox" data-f="profile"> Amount is over 3 times the client's usual outflow</label>
+        <label><input type="checkbox" data-f="ato"> Email, phone or address changed in the last 30 days</label>
+        <label><input type="checkbox" data-f="senior"> Client is 65+ and the story doesn't fit</label>
+        <label><input type="checkbox" data-f="callback" checked> Client confirmed by call-back to number on file</label>
+        <label><input type="checkbox" data-f="docs" checked> Purpose and beneficiary documented</label>
+      </fieldset>
+      <div class="out" id="out3" aria-live="polite"></div>
+      <div class="msg" id="msg3" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="case" role="tabpanel" id="p4" aria-labelledby="t4" hidden>
+    <article class="case__brief">
+      <h3>Restriction on the wrong account</h3>
+      <p class="sev sev--red">Two harms, both live. Fix in the next hour.</p>
+      <div class="facts"><p>A litigation hold meant for #78901 went on #78091. #78901 traded freely for two days. #78091's advisor wants to know why the client can't trade.</p></div>
+      <h4>What's wrong</h4>
+      <p>We may have broken a legal order, and we've blocked a client with no reason to be blocked. Fix the order first: assets can still be leaving #78901.</p>
+      <h4>Rules</h4>
+      <ul class="rules">
+        <li><cite>FINRA 3110(a), (b)</cite><span>Restrictions are a supervisory control. One person keyed one number, with no check. That's the finding.</span></li>
+        <li><cite>SEA 17a-3(a)(17), FINRA 4511, 4512</cite><span>Account records must be accurate. Every restriction change needs a who, when and why.</span></li>
+        <li><cite>FINRA 4530(b)</cite><span>Legal decides whether trading against the order is a violation that must be reported within 30 days.</span></li>
+        <li><cite>FINRA 4513, 4530(d)</cite><span>If #78091 complains in writing, record it and include it in quarterly complaint statistics.</span></li>
+        <li><cite>FINRA 2010</cite><span>Fair dealing: make #78091 whole if the block cost the client a trade.</span></li>
+      </ul>
+      <h4>Do now, in order</h4>
+      <ol>
+        <li>Put the hold on #78901 now, with trading and outgoing money movement both blocked. A second person verifies name and TIN against the order.</li>
+        <li>Pull every trade and transfer on #78901 for the two days. Send it to Legal today.</li>
+        <li>Lift the hold on #78091, approved and logged. Tell the advisor plainly: our keying error, now fixed.</li>
+        <li>Ask whether #78091 missed a trade. If so, compute the make-whole against the price at the time.</li>
+        <li>Legal decides on notice to the court or opposing counsel, and on 4530.</li>
+      </ol>
+      <h4>Prevent it</h4>
+      <p>Restrictions are applied by account name and TIN, not number alone, under maker-checker. A weekly reconciliation of open legal orders against restricted accounts.</p>
+    </article>
+    <div class="demo" data-ui>
+      <p class="demo__t">Restriction entry with maker-checker</p>
+      <div class="acct">
+        <div><span class="k">Order names</span><div class="num" id="nA">78<mark>9</mark><mark>0</mark>1</div><span class="k">M. Ellery, TIN ••4417</span></div>
+        <div><span class="k">Restriction placed on</span><div class="num" id="nB">78<mark>0</mark><mark>9</mark>1</div><span class="k">D. Whitfield, TIN ••2290</span></div>
+      </div>
+      <label class="f" for="acctIn">Account to restrict
+        <input id="acctIn" type="text" inputmode="numeric" autocomplete="off" value="78091" maxlength="5">
+      </label>
+      <label class="f" for="tinIn">Last 4 of TIN on the legal order
+        <input id="tinIn" type="text" inputmode="numeric" autocomplete="off" value="4417" maxlength="4">
+      </label>
+      <div class="ctl"><button class="b b--go" type="button" id="apply4">Submit for checker approval</button></div>
+      <div class="out" id="out4" aria-live="polite">Old process: one person types a number. Try the number that was keyed.</div>
+      <table class="q">
+        <caption class="note" style="text-align:left;caption-side:top;padding-bottom:6px">#78901 activity while unrestricted (send to Legal)</caption>
+        <thead><tr><th>Day</th><th>Activity</th><th class="n">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Day 1</td><td>Sell 1,200 VTI</td><td class="n">$341,880</td></tr>
+          <tr><td>Day 1</td><td>Buy 300 MSFT</td><td class="n">$128,610</td></tr>
+          <tr class="hit"><td>Day 2</td><td>ACH out to new bank</td><td class="n">$95,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<figure class="plate plate--film">
+  <video muted loop playsinline autoplay preload="metadata" poster="assets/nyse-floor-poster.jpg" width="640" height="480" aria-label="Clerks and brokers working the New York Stock Exchange floor, 1950s film">
+    <source src="assets/nyse-floor.webm" type="video/webm">
+    <source src="assets/nyse-floor.mp4" type="video/mp4">
+  </video>
+  <figcaption>Back office meets front office: the New York Stock Exchange floor in <i>The Big Board</i>, 1950s.</figcaption>
+</figure>
+
+<section class="sheet" id="review" aria-labelledby="rev-h">
+  <h2 id="rev-h">Prompt 2: Q2 2026 back-office review</h2>
+  <p class="lede">The seven items I'd put in front of leadership, ranked by regulatory exposure first and advisor pain second.</p>
+  <div class="concerns">
+    <div class="concern"><p class="fig">4 days</p><div>
+      <h3>FOCUS report filed 4 days late</h3>
+      <p class="why">FOCUS Part IIA is due 17 business days after quarter end (<cite>SEA 17a-5(a)</cite>), so Q2 was due July 24, 2026. A late filing is a books-and-records failure regulators can see. The cause, a reconciliation break, is worse: if our books weren't current, <cite>SEA 17a-11(d)</cite> required same-day notice to the SEC and FINRA.</p>
+    </div></div>
+    <div class="concern"><p class="fig">2</p><div>
+      <h3>2 escheat accounts missed the state deadline</h3>
+      <p class="why">Missing a state deadline triggers interest and penalties under that state's unclaimed property act, and it is a state audit trigger. It also raises the question of whether we ran the lost-securityholder searches <cite>SEA 17Ad-17</cite> requires.</p>
+    </div></div>
+    <div class="concern"><p class="fig">6 of 47</p><div>
+      <h3>6 of 47 AML alerts took over 5 business days</h3>
+      <p class="why">The SAR clock (<cite>31 CFR 1023.320</cite>, 30 days) starts when facts are detected. An alert sitting for a week eats that clock and is a common <cite>FINRA 3310</cite> exam finding. 13% aged badly while 87% cleared in a day. Find out what is different about those six.</p>
+    </div></div>
+    <div class="concern"><p class="fig">1 of 3</p><div>
+      <h3>1 of 3 regulator requests answered late</h3>
+      <p class="why">If it was a <cite>FINRA 8210</cite> request, lateness alone is a violation. FINRA sanctions late 8210 responses. Nothing damages our standing with FINRA faster.</p>
+    </div></div>
+    <div class="concern"><p class="fig">1.8d</p><div>
+      <h3>Block allocations fixed after settlement</h3>
+      <p class="why">Under T+1, 22 discrepancies averaging 1.8 days means most were resolved after the trade settled. That is a fail risk, and an after-the-fact allocation invites a cherry-picking question under the adviser's allocation policy. Every change needs <cite>FINRA 4515</cite> approval.</p>
+    </div></div>
+    <div class="concern"><p class="fig">0.8%</p><div>
+      <h3>Trade breaks 60% above industry</h3>
+      <p class="why">About 100 breaks against an expected 62, so 38 extra. Each is a fail risk, a client service call and a <cite>FINRA 3110</cite> question about order-entry controls.</p>
+    </div></div>
+    <div class="concern"><p class="fig">6h avg</p><div>
+      <h3>Advisors feel the slow tail</h3>
+      <p class="why">Six hours meets "same day" on average. The 11 complaints say the slow tail is the problem. 12 of 85 international wires (14%) were held and advisors heard about it only when they called.</p>
+    </div></div>
+  </div>
+</section>
+
+<section class="sheet" aria-labelledby="rc-h">
+  <h2 id="rc-h">Root-cause questions</h2>
+  <p class="lede">I'd ask "why" until the answer is a control we can change, not a person to blame.</p>
+  <div class="rc">
+    <div><h3>FOCUS, 4 days late</h3><ul>
+      <li>Which accounts didn't reconcile: Fidelity's records against our general ledger, or our ledger against the bank?</li>
+      <li>When did we know? Was the break open before quarter end?</li>
+      <li>Who owns the FOCUS calendar, and when does the internal deadline fall before the regulatory one?</li>
+      <li>Did the break mean our books weren't current? If so, was the 17a-11(d) notice considered?</li>
+    </ul></div>
+    <div><h3>Escheatment, 2 accounts missed</h3><ul>
+      <li>Who tracks dormancy dates by state, and from which system?</li>
+      <li>Did the due-diligence letters go out in the window the state requires?</li>
+      <li>Were the two missed because of a state rule difference, or because nobody owned them?</li>
+      <li>Have we run the 17Ad-17 database searches on lost holders?</li>
+    </ul></div>
+    <div><h3>AML, 6 slow alerts</h3><ul>
+      <li>Do the six share a scenario, an analyst, or a wait on the client for documents?</li>
+      <li>Is there an aging rule that escalates at day 3?</li>
+      <li>How many analyst hours per alert, and how many alerts per analyst?</li>
+      <li>Did any of the six end in a SAR? Was it filed within 30 days of detection?</li>
+    </ul></div>
+    <div><h3>Regulator request, 1 late</h3><ul>
+      <li>Was it an 8210 or an exam document request?</li>
+      <li>Did we ask FINRA for an extension before the deadline?</li>
+      <li>Was the delay in finding the data or in sign-off?</li>
+    </ul></div>
+    <div><h3>Breaks and block allocations</h3><ul>
+      <li>What share of breaks are oversells, wrong accounts or late allocations? (Fake data: 28 late allocation, 27 oversell.)</li>
+      <li>Do breaks cluster by advisor, by order channel or by time of day?</li>
+      <li>Why do allocations reach Fidelity after trade date: missing pre-allocation, or rejected files?</li>
+    </ul></div>
+    <div><h3>Money movement</h3><ul>
+      <li>What is the 90th percentile, not the mean, by request type?</li>
+      <li>Where does the time go: intake, review, approval, or Fidelity?</li>
+      <li>Which requests could be standing instructions that need no manual review?</li>
+    </ul></div>
+  </div>
+</section>
+
+<section class="sheet" aria-labelledby="fe-h">
+  <h2 id="fe-h">FOCUS and escheatment</h2>
+  <div class="two">
+    <div>
+      <h3>What FOCUS is</h3>
+      <p>The Financial and Operational Combined Uniform Single report. Every broker-dealer files it under SEA 17a-5 through FINRA's eFOCUS. It shows net capital, assets, liabilities, revenue and, for carrying firms, the customer reserve. An introducing firm like Savvy files Part IIA quarterly, within 17 business days of quarter end, plus FINRA 4524 supplemental schedules.</p>
+      <h3>How I'd handle the risk</h3>
+      <ul>
+        <li>Internal deadline at business day 10, reconciliation sign-off at day 7.</li>
+        <li>Daily reconciliation of Fidelity's records against the general ledger, not only at quarter end.</li>
+        <li>FINOP signs a checklist; Compliance gets a copy of every filing receipt.</li>
+        <li>Any break open over 5 days goes to the FINOP to test whether 17a-11 notice is due.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>What escheatment is</h3>
+      <p>When an account goes dormant (usually 3 years without client contact for securities), state unclaimed property law requires the firm to send the owner a due-diligence letter, then report and hand the assets to the state of the owner's last known address. The owner can claim it back from the state. Each state sets its own dormancy period and deadline.</p>
+      <h3>How I'd handle the risk</h3>
+      <ul>
+        <li>A dormancy calendar by state, generated monthly from last-contact dates.</li>
+        <li>Advisor outreach at 30 months: one call or login resets dormancy.</li>
+        <li>Due-diligence letters sent automatically in each state's window.</li>
+        <li>For the two missed accounts: report now and use the state's voluntary disclosure program to cut penalties.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" aria-labelledby="dr-h">
+  <h2 id="dr-h">Disclosure and repair</h2>
+  <p class="lede">Disclose early, fix the control, show proof. FINRA's credit for cooperation (Regulatory Notice 19-23) rewards a firm that finds, reports and remediates its own problems.</p>
+  <div class="tbl-wrap">
+  <table class="kri">
+    <thead><tr><th>Issue</th><th>Who we tell, and when</th><th>Fix now</th><th>Proof it's fixed</th></tr></thead>
+    <tbody>
+      <tr><td>FOCUS late</td><td data-h="Who we tell, and when">FINRA coordinator, with the cause in writing. SEC and FINRA same day if 17a-11(d) applied.</td><td data-h="Fix now">Daily reconciliation, day-10 internal deadline</td><td data-h="Proof it's fixed">Q3 and Q4 filed early, with receipts</td></tr>
+      <tr><td>Escheatment</td><td data-h="Who we tell, and when">Affected states, through voluntary disclosure where offered. Clients by letter.</td><td data-h="Fix now">File and remit the 2 accounts. Build a dormancy calendar.</td><td data-h="Proof it's fixed">Zero past-deadline accounts for 4 quarters</td></tr>
+      <tr><td>Aged AML alerts</td><td data-h="Who we tell, and when">AML officer and CCO now. Board in the annual 3310 test.</td><td data-h="Fix now">Clear the 6. Check SAR timing. Escalation at day 3.</td><td data-h="Proof it's fixed">No alert open over 5 business days for 2 quarters</td></tr>
+      <tr><td>Late regulator request</td><td data-h="Who we tell, and when">FINRA coordinator: own it, explain the cause.</td><td data-h="Fix now">Request log with owner, due date, extension date</td><td data-h="Proof it's fixed">All requests on time, or extensions asked in advance</td></tr>
+      <tr><td>Block allocations</td><td data-h="Who we tell, and when">CCO, plus a review of the adviser allocation policy.</td><td data-h="Fix now">Pre-allocation before order entry, trade-date cut-off</td><td data-h="Proof it's fixed">Allocations done on trade date at 99%+</td></tr>
+      <tr><td>Exceptions 1 to 4</td><td data-h="Who we tell, and when">Client and advisor in plain words. Legal for #78901.</td><td data-h="Fix now">The controls in each exception's "Prevent it"</td><td data-h="Proof it's fixed">Monthly control test results</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="sheet" aria-labelledby="fb-h">
+  <h2 id="fb-h">Wires and AML holds</h2>
+  <p class="lede">Eleven advisors say money moves slowly; four say AML holds surprise them. Both are fixable without loosening a single control.</p>
+  <div class="two">
+    <div>
+      <h3>Wire and money movement turnaround</h3>
+      <ol>
+        <li>Publish an SLA and cut-off by request type, and report the 90th percentile, not the average.</li>
+        <li>Move recurring third-party transfers to standing letters of authorization that meet the SEC's February 2017 custody-rule no-action conditions. Those skip manual review.</li>
+        <li>Pre-check every request on intake: missing signature, wrong name, cut-off missed. Most delay is rework.</li>
+        <li>Each request gets a live status the advisor can see: received, in review, sent, with a Fed reference.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>AML holds, told before the advisor calls</h3>
+      <ol>
+        <li>When a hold starts, the advisor gets an automatic message within 30 minutes: "In standard review. Next update by 2:00 p.m. CT."</li>
+        <li>The message never gives the reason. 31 CFR 1023.320(e) bars any hint of a SAR. Analysts get a script.</li>
+        <li>An international wire form asks for purpose, relationship and source of funds up front. Fewer holds, faster clears.</li>
+        <li>A quarterly advisor note: what triggers review, how long it takes, what speeds it up.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" aria-labelledby="kri-h">
+  <h2 id="kri-h">Monthly warning metrics</h2>
+  <p class="lede">Each metric has a formula, a source and an owner. Most refresh daily and report monthly, so a problem shows up in weeks, not at the annual review.</p>
+  <div class="tbl-wrap">
+  <table class="kri">
+    <thead><tr><th>Metric</th><th>Formula</th><th>Refresh</th><th>Green / amber / red</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td>Trade break rate</td><td data-h="Formula">Breaks ÷ trades</td><td data-h="Refresh">Daily, weekly trend</td><td data-h="Green / amber / red">&lt;0.5% / 0.5–0.7% / &gt;0.7%</td><td data-h="Owner">Trade ops</td></tr>
+      <tr><td>Breaks unresolved at settlement</td><td data-h="Formula">Breaks open at T+1 cut-off</td><td data-h="Refresh">Daily</td><td data-h="Green / amber / red">0 / 1–2 / 3+</td><td data-h="Owner">Trade ops</td></tr>
+      <tr><td>Allocations done on trade date</td><td data-h="Formula">Blocks allocated by T ÷ blocks</td><td data-h="Refresh">Daily</td><td data-h="Green / amber / red">≥99% / 95–99% / &lt;95%</td><td data-h="Owner">Trade ops</td></tr>
+      <tr><td>Money movement p90</td><td data-h="Formula">90th percentile approval hours</td><td data-h="Refresh">Weekly</td><td data-h="Green / amber / red">≤8h / 8–12h / &gt;12h</td><td data-h="Owner">Cashiering</td></tr>
+      <tr><td>RCD duplicates caught</td><td data-h="Formula">Duplicate items blocked, items posted twice</td><td data-h="Refresh">Daily</td><td data-h="Green / amber / red">0 posted / – / any posted</td><td data-h="Owner">Cashiering</td></tr>
+      <tr><td>AML alert aging</td><td data-h="Formula">Open alerts by age, 0–1, 2–3, 4–5, 5+ days</td><td data-h="Refresh">Daily</td><td data-h="Green / amber / red">0 over 3 / 1–2 / any over 5</td><td data-h="Owner">AML officer</td></tr>
+      <tr><td>SAR timeliness</td><td data-h="Formula">Days from detection to filing</td><td data-h="Refresh">Monthly</td><td data-h="Green / amber / red">≤25 / 26–30 / &gt;30</td><td data-h="Owner">AML officer</td></tr>
+      <tr><td>Wire hold rate, with advisor notice</td><td data-h="Formula">Holds ÷ international wires; % notified in 30 min</td><td data-h="Refresh">Weekly</td><td data-h="Green / amber / red">100% notified / 90% / &lt;90%</td><td data-h="Owner">AML + cashiering</td></tr>
+      <tr><td>Reconciliation breaks over 5 days</td><td data-h="Formula">Open breaks between Fidelity and our ledger</td><td data-h="Refresh">Daily</td><td data-h="Green / amber / red">0 / 1–3 / 4+</td><td data-h="Owner">FINOP</td></tr>
+      <tr><td>Filing calendar</td><td data-h="Formula">Days ahead of each regulatory deadline</td><td data-h="Refresh">Daily</td><td data-h="Green / amber / red">≥5 early / 1–4 / late</td><td data-h="Owner">FINOP + Compliance</td></tr>
+      <tr><td>Escheat pipeline</td><td data-h="Formula">Accounts within 90 days of a state deadline, not yet actioned</td><td data-h="Refresh">Monthly</td><td data-h="Green / amber / red">0 / 1–2 / any past due</td><td data-h="Owner">Compliance</td></tr>
+      <tr><td>Regulator request on-time</td><td data-h="Formula">On time ÷ received</td><td data-h="Refresh">Per request</td><td data-h="Green / amber / red">100% / – / any late</td><td data-h="Owner">Compliance</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<figure class="plate">
+  <img src="assets/board-of-trade-pit-of-craziness-265184314.jpg" width="1600" height="1200" alt="Traders in coloured jackets signalling in a Chicago Board of Trade pit, 2006" loading="lazy">
+  <figcaption>Surveillance learned on the floor. Chicago Board of Trade pit, 2006.</figcaption>
+</figure>
+
+<section class="desk" id="workflow" aria-labelledby="wf-h">
+  <h2 id="wf-h">The monitoring workflow</h2>
+  <p class="lede">The same loop my surveillance desks at Cboe and FINRA ran, pointed at operations: every exception becomes an alert with an owner, a clock and an audit trail.</p>
+  <ol class="flow" style="--paper:var(--paper)">
+    <li><b>Detect</b>Nightly files from Fidelity: breaks, wires, RCD, positions, AML alerts, reconciliation.</li>
+    <li><b>Score</b>Rules assign severity and an SLA clock. Regulatory deadlines count down.</li>
+    <li><b>Route</b>Each alert goes to an owner queue: trade ops, cashiering, AML, FINOP.</li>
+    <li><b>Escalate</b>SLA breach or red metric goes to the CCO. Advisors get status, never the reason.</li>
+    <li><b>Close</b>Disposition, rationale and evidence, kept under SEA 17a-4.</li>
+    <li><b>Learn</b>A monthly root-cause review changes a control, then tests it.</li>
+  </ol>
+  <div class="cta">
+    <a class="btn" href="./dashboard.html">Open the live dashboard</a>
+  </div>
+</section>
+
+<div class="desk duo">
+  <figure class="plate plate--tall"><img src="assets/chicago-board-of-trade-1885.jpg" width="1920" height="2781" alt="Engraving of the Chicago Board of Trade building, 1885" loading="lazy"><figcaption>Chicago Board of Trade, 1885. A. T. Andreas.</figcaption></figure>
+  <figure class="plate plate--tall"><img src="assets/randolph-street-east-from-lasalle-street-chicago.jpg" width="1920" height="2473" alt="Randolph Street looking east from LaSalle Street, Chicago, 1900" loading="lazy"><figcaption>Randolph Street from LaSalle, Chicago, 1900. Detroit Publishing Co.</figcaption></figure>
+</div>
+
+<section class="desk" id="tableau" aria-labelledby="tb-h">
+  <h2 id="tb-h">Tableau files</h2>
+  <p class="lede">The same fake Q2 data as flat files. Totals match the brief: 12,450 trades, 100 breaks, 3,100 requests, 47 alerts, 85 wires.</p>
+  <ul class="dl">
+    <li><a href="assets/savvy/kri_summary_q2_2026.csv" download>kri_summary_q2_2026.csv<span>11 metrics with targets and status</span></a></li>
+    <li><a href="assets/savvy/daily_trades_q2_2026.csv" download>daily_trades_q2_2026.csv<span>Trades and breaks by business day</span></a></li>
+    <li><a href="assets/savvy/trade_breaks_q2_2026.csv" download>trade_breaks_q2_2026.csv<span>100 breaks with cause and hours</span></a></li>
+    <li><a href="assets/savvy/block_allocations_q2_2026.csv" download>block_allocations_q2_2026.csv<span>22 discrepancies, days to fix</span></a></li>
+    <li><a href="assets/savvy/money_movement_q2_2026.csv" download>money_movement_q2_2026.csv<span>3,100 requests, approval hours</span></a></li>
+    <li><a href="assets/savvy/aml_alerts_q2_2026.csv" download>aml_alerts_q2_2026.csv<span>47 alerts with aging</span></a></li>
+    <li><a href="assets/savvy/international_wires_q2_2026.csv" download>international_wires_q2_2026.csv<span>85 wires, 12 held, 3 escalated</span></a></li>
+  </ul>
+  <ol class="steps">
+    <li>Tableau Public: Connect, Text file, load each CSV as its own data source.</li>
+    <li>Sheet "Break rate": daily_trades, Month on columns, SUM(breaks)/SUM(trades) on rows, a constant line at 0.5%.</li>
+    <li>Sheet "Break causes": trade_breaks, cause on rows, count of break_id, sorted.</li>
+    <li>Sheet "Approval tail": money_movement, histogram of hours_to_approve, colored by type, reference line at 8 hours.</li>
+    <li>Sheet "AML aging": aml_alerts, aging_bucket by count, scenario as detail.</li>
+    <li>Sheet "Wire holds": international_wires, held and escalated_to_compliance as a funnel.</li>
+    <li>Sheet "Scorecard": kri_summary as a text table, status coloring red/amber/green.</li>
+    <li>Dashboard 1440 × 900: scorecard across the top, five charts below, a Month filter applied to all.</li>
+  </ol>
+</section>
+</main>
+
+<footer class="back">
+  <div class="back__card">
+    <p class="back__name">Rahul Das</p>
+    <div class="back__row">
+      <p>Compliance and surveillance in Chicago. Ready to relocate to New York.</p>
+      <ul class="back__links">
+        <li><a href="./dashboard.html">Ops dashboard</a></li>
+        <li><a href="https://www.linkedin.com/in/rahul-das-capm/" rel="noopener">LinkedIn</a></li>
+        <li><a href="mailto:rdas0541@gmail.com">rdas0541@gmail.com</a></li>
+      </ul>
+    </div>
+    <p class="back__credit">Rules cited as of November 2026; confirm against current text before relying on them. All data is fake. Pictures: Edison stock ticker, Jaclyn Nash, Smithsonian, public domain. Wheat pit, about 1920, Library of Congress, public domain. "Board Of Trade Pit Of Craziness" by Richie Diesterheft, CC BY 2.0, via Wikimedia Commons. Chicago Board of Trade 1885, A. T. Andreas, public domain. Randolph Street, 1900, Detroit Publishing Co., public domain. <i>The Big Board</i>, On Film, Inc., Prelinger Archives, public domain.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // tabs
+  const tabs = [...document.querySelectorAll('.tab')];
+  const select = (t) => {
+    tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on; });
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return; const n = tabs[(i + d + tabs.length) % tabs.length]; select(n); n.focus(); e.preventDefault();
+    });
+  });
+  const money = (n) => (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // 1: trade break
+  let fix = 'buy';
+  const r = document.getElementById('buyin'), ro = document.getElementById('buyinOut');
+  const tl = document.getElementById('tl1'), o1 = document.getElementById('out1');
+  const draw1 = () => {
+    const p = +r.value; ro.textContent = '$' + p.toFixed(2);
+    const cost = 50 * (p - 228.40);
+    if (fix === 'buy') {
+      tl.innerHTML = '<div class="on"><b>T, today</b>Buy 50 AAPL in error account</div><div class="ok"><b>T+1</b>500 delivered. No fail.</div><div><b>T+2</b>Nothing due</div><div><b>Books</b>Cancel 500, rebill 450 to client. 4515 sign-off.</div>';
+      o1.className = 'out is-ok';
+      o1.innerHTML = '<b>Settles clean.</b> Error account ' + (cost > 0 ? 'loses ' : 'gains ') + money(Math.abs(cost)) + '. The client is not charged. Log the 200(g) mismark and fix CAT.';
+    } else {
+      tl.innerHTML = '<div><b>T, today</b>No action</div><div class="on"><b>T+1</b>Fidelity fails to deliver 50 shares</div><div class="on"><b>T+2 open</b>Rule 204(a) forced close-out</div><div class="on"><b>After</b>Fail on the books, firm still pays</div>';
+      o1.className = 'out is-bad';
+      o1.innerHTML = '<b>Fail to deliver.</b> Fidelity buys in at the T+2 open, at whatever price, and charges it back to Savvy. Same cost, plus a fail, a 204 record and a supervision question.';
+    }
+  };
+  document.querySelectorAll('[data-fix]').forEach((b) => b.addEventListener('click', () => {
+    fix = b.dataset.fix; document.querySelectorAll('[data-fix]').forEach((x) => x.setAttribute('aria-pressed', x === b)); draw1();
+  }));
+  r.addEventListener('input', draw1); draw1();
+
+  // 2: duplicate deposit
+  const rows = document.querySelectorAll('#rcd tbody tr'), o2 = document.getElementById('out2');
+  const bal = document.getElementById('bal'), av = document.getElementById('avail');
+  const hold = document.getElementById('dupHold'), rev = document.getElementById('dupRev');
+  document.getElementById('dupScan').addEventListener('click', (e) => {
+    rows[0].classList.add('hit'); rows[2].classList.add('hit');
+    o2.className = 'out is-bad'; o2.innerHTML = '<b>Match on all five fields:</b> routing, account, check 1047, $40,000.00, same date. RCD-5523 is a duplicate of RCD-5518.';
+    hold.disabled = false; e.currentTarget.disabled = true; hold.focus();
+  });
+  hold.addEventListener('click', () => {
+    av.textContent = '$40,000'; hold.disabled = true; rev.disabled = false; rev.focus();
+    o2.className = 'out is-warn'; o2.innerHTML = '<b>$40,000 restricted at Fidelity.</b> Client can still use the real $40,000. Next: reverse RCD-5523 by journal, maker and checker.';
+  });
+  rev.addEventListener('click', () => {
+    bal.textContent = '$40,000'; rows[2].style.opacity = 0.45; rev.disabled = true;
+    o2.className = 'out is-ok'; o2.innerHTML = '<b>Reversed.</b> JE-77120, maker R. Das, checker ops principal, both image IDs attached. Blotter and ledger corrected; advisor and client told. Next: search the quarter for other duplicates.';
+  });
+
+  // 3: AML wire
+  const boxes = document.querySelectorAll('[data-f]'), o3 = document.getElementById('out3'), m3 = document.getElementById('msg3');
+  const flags = () => Object.fromEntries([...boxes].map((b) => [b.dataset.f, b.checked]));
+  const draw3 = () => {
+    const f = flags(); let cls, txt, msg;
+    if (f.ofac) { cls = 'is-bad'; txt = '<b>Block or reject. Do not send.</b> Report to OFAC within 10 business days (31 CFR 501.603/.604). Escalate to the AML officer now.'; msg = 'The wire for WR-20931 is still in review and won\'t go out today. Compliance will contact you directly.'; }
+    else if (f.ato && !f.callback) { cls = 'is-bad'; txt = '<b>Hold: possible account takeover.</b> Contact details changed and the client is not confirmed. Lock online access and call the number on file from before the change.'; msg = 'The wire is in standard review. We need to speak with your client on their number of record before it can go. Next update by 3:00 p.m. CT.'; }
+    else if (f.senior) { cls = 'is-warn'; txt = '<b>FINRA 2165 hold.</b> Reasonable belief of exploitation: hold up to 15 business days, call the trusted contact (4512), escalate internally, document everything.'; msg = 'The wire is on hold while we complete a client protection review. Next update tomorrow by 10:00 a.m. CT.'; }
+    else if (f.fatf || f.profile || !f.docs || !f.callback) { cls = 'is-warn'; txt = '<b>Escalate to the AML officer.</b> ' + [f.fatf && 'High-risk country.', f.profile && 'Out of profile.', !f.docs && 'Purpose not documented.', !f.callback && 'No call-back yet.'].filter(Boolean).join(' ') + ' SAR decision clock started today; 30 days max.'; msg = 'The wire is in standard review. We may ask your client for supporting documents. Next update by 3:00 p.m. CT.'; }
+    else { cls = 'is-ok'; txt = '<b>Release.</b> Confirmed by call-back, purpose documented, in profile, no list match. Write the rationale on the alert and send before cut-off.'; msg = 'Review complete. The wire for WR-20931 is released and will go out today. Fed reference to follow.'; }
+    o3.className = 'out ' + cls; o3.innerHTML = txt;
+    m3.innerHTML = '<b>Auto-message to advisor (no reason given, per 31 CFR 1023.320(e))</b>' + msg;
+  };
+  boxes.forEach((b) => b.addEventListener('change', draw3)); draw3();
+  const left = document.getElementById('left');
+  const tick = () => {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const cut = new Date(now); cut.setHours(16, 0, 0, 0);
+    const ms = cut - now, wk = now.getDay() % 6 === 0;
+    left.textContent = wk ? 'Weekend, next business day' : ms <= 0 ? 'Past cut-off, next business day' : Math.floor(ms / 3.6e6) + 'h ' + Math.floor(ms / 6e4) % 60 + 'm';
+  };
+  tick(); setInterval(tick, 30000);
+
+  // 4: restriction
+  const ACCTS = { '78901': ['M. Ellery', '4417'], '78091': ['D. Whitfield', '2290'] };
+  const o4 = document.getElementById('out4');
+  document.getElementById('apply4').addEventListener('click', () => {
+    const a = document.getElementById('acctIn').value.trim(), t = document.getElementById('tinIn').value.trim();
+    const rec = ACCTS[a];
+    if (!rec) { o4.className = 'out is-bad'; o4.innerHTML = '<b>No such account.</b> Check the order.'; return; }
+    if (rec[1] !== t) { o4.className = 'out is-bad'; o4.innerHTML = '<b>Stopped.</b> #' + a + ' belongs to ' + rec[0] + ', TIN ••' + rec[1] + '. The order names TIN ••' + t + '. Name and TIN don\'t match, so it never reaches the checker.'; return; }
+    o4.className = 'out is-ok'; o4.innerHTML = '<b>Matched: #' + a + ', ' + rec[0] + '.</b> Sent to checker. On approval: trading and outgoing money movement blocked, logged under 4511.';
+  });
+})();
+</script>
+<script type="module" src="assets/motion/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+metric,value,target_or_benchmark,unit,area,status
+Trade break rate,0.8,0.5,%,Trades,Red
+Block allocation avg days to resolve,1.8,1.0,days,Trades,Red
+Money movement avg approval time,6.0,8.0,hours,Cashiering,Amber
+AML alerts aged over 5 business days,6,0,alerts,AML,Red
+International wire hold rate,14.1,10,%,AML,Amber
+Wire holds escalated to Compliance,3,,wires,AML,Watch
+FOCUS filing days late,4,0,days,Regulatory,Red
+Escheatment accounts past state deadline,2,0,accounts,Regulatory,Red
+Regulator requests answered late,1,0,requests,Regulatory,Red
+Advisors citing slow money movement,11,,advisors,Advisor feedback,Amber
+Advisors asking for proactive AML notice,4,,advisors,Advisor feedback,Amber

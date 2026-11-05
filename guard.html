@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oversell Guard · Rahul Das</title>
-<meta name="description" content="The Oversell Guard Python script from the Savvy take-home, running in the browser on fake orders. Edit an order and run it again.">
+<meta name="description" content="The Oversell Guard Python script from the Savvy take-home, running in the browser on the Exception 1 trade: 500 AAPL sold, 450 held.">
 <meta name="author" content="Rahul Das">
 <meta name="robots" content="noindex, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,101 +12,68 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <style>
-  :root { --line: #2a3558; --line-2: #33406a; --amber: #f2b84b; --pad: clamp(14px, 1.6vw, 22px); }
-  body { font-size: 15px !important; }
-  .app { width: min(1440px, 100% - 2 * var(--m)); margin: 0 auto; padding: 20px 0 64px; display: grid; gap: 12px; }
-  .top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; padding: 8px 0 6px; }
-  .top h1 { font-size: clamp(1.35rem, 1.1rem + 0.6vw, 1.75rem) !important; margin: 0; }
-  .top p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+  :root { --line: #2a3558; --amber: #f2b84b; --pad: clamp(18px, 2.4vw, 36px); }
+  body { font-size: 16px !important; }
+  .app { width: min(1180px, 100% - 2 * var(--m)); margin: 0 auto; padding: 28px 0 72px; display: grid; gap: 16px; }
+  .top h1 { font-size: clamp(1.4rem, 1.2rem + 0.6vw, 1.9rem) !important; margin: 0 0 8px; }
+  .top p { margin: 0; color: var(--muted); max-width: 60ch; font-size: 17px; }
   .p { background: var(--surface); padding: var(--pad); min-width: 0; }
-  .p h2 { font-size: 15px !important; font-weight: 600 !important; letter-spacing: 0 !important; line-height: 1.3 !important; margin: 0 0 2px; }
-  .p .sub { color: var(--muted); margin: 0 0 14px; font-size: 13.5px; }
-  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: start; }
-  .c7 { grid-column: span 7; } .c5 { grid-column: span 5; } .c12 { grid-column: span 12; }
+  .p h2 { font-size: 18px !important; font-weight: 600 !important; letter-spacing: -0.01em !important; line-height: 1.3 !important; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 15px; }
+  .p a, .foot a { color: var(--ink-hi); }
 
-  /* how it works: four steps as type */
-  .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); }
-  .flow li { list-style: none; padding: 16px var(--pad) 18px; position: relative; }
-  .flow li + li::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 1px; background: var(--line); }
-  .flow b { display: block; font-size: 15px; color: var(--ink-hi); margin-bottom: 4px; }
-  .flow b span { color: var(--accent); margin-right: 6px; font-variant-numeric: tabular-nums; }
-  .flow p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
-  .flow code { font-family: var(--code); font-size: 12.5px; color: var(--ink-hi); }
-  ol.flow { margin: 0; padding: 0; }
+  /* the case */
+  .case { display: grid; gap: 24px; }
+  .ask { font-size: 17px; margin: 0; }
+  .seg { display: inline-flex; background: var(--bg); padding: 4px; gap: 4px; flex-wrap: wrap; }
+  .seg button { font: inherit; font-weight: 600; font-size: 15px; border: 0; background: none; color: var(--muted); padding: 0 18px; min-height: 48px; cursor: pointer; transition: background-color var(--t-hover) var(--ease-out), color var(--t-hover) var(--ease-out); }
+  .seg button:hover { color: var(--ink-hi); }
+  .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink-hi); }
+  .seg button:disabled { cursor: progress; }
 
-  .acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .acts button { font: inherit; font-weight: 600; font-size: 14px; border: 0; min-height: 44px; padding: 0 16px; cursor: pointer; background: var(--surface-2); color: var(--ink-hi); transition: background-color var(--t-hover) var(--ease-out), transform var(--t-press) var(--ease-out); }
-  .acts button:hover { background: #2d3b66; }
-  .acts button:active { transform: scale(0.97); }
-  .acts .go { background: var(--accent); color: var(--accent-ink); }
-  .acts .go:hover { background: #ff7466; }
-  .acts button:disabled { opacity: 0.45; cursor: progress; }
-  .status { font-size: 13.5px; color: var(--muted); }
+  .verdict { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; align-items: center; padding: 22px 24px; background: var(--bg); }
+  .verdict .tag { font-size: 15px; font-weight: 600; padding: 8px 14px; color: var(--bg); grid-row: span 2; align-self: start; }
+  .verdict b { font-size: clamp(1.25rem, 1rem + 0.8vw, 1.7rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+  .verdict span.why { color: var(--muted); font-size: 16px; }
+  .BLOCK { background: var(--accent); } .HOLD { background: var(--amber); } .WARN { background: var(--blue); } .PASS { background: var(--bid); }
 
-  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; }
-  .chips button { font: inherit; font-size: 13.5px; border: 0; background: var(--bg); color: var(--ink-hi); padding: 6px 12px; min-height: 40px; cursor: pointer; text-align: left; transition: background-color var(--t-hover) var(--ease-out); }
-  .chips button:hover { background: var(--surface-2); }
+  .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .three > div { background: var(--bg); padding: 20px 22px; }
+  .three h3 { font-size: 13px !important; text-transform: none; color: var(--muted); font-weight: 500 !important; letter-spacing: 0 !important; margin: 0 0 12px; }
+  .math { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; font-variant-numeric: tabular-nums; font-size: 16px; }
+  .math dt { color: var(--muted); } .math dd { margin: 0; text-align: right; font-weight: 500; }
+  .math .big { color: var(--ink-hi); font-weight: 600; font-size: 19px; padding-top: 6px; }
+  .math .red { color: var(--accent); } .math .green { color: var(--bid); }
+  .three p { margin: 0 0 10px; font-size: 16px; }
+  .three p:last-child { margin-bottom: 0; }
+  .quote { font-size: 16px; line-height: 1.5; }
+  .cites { color: var(--muted); font-size: 14px; }
 
-  .tw { overflow-x: auto; }
-  table.qt { width: 100%; border-collapse: collapse; font-size: 14px !important; }
-  .qt th { text-align: left; font-weight: 500 !important; color: var(--muted) !important; font-size: 13px !important; padding: 8px 10px; border-bottom: 1px solid var(--line-2) !important; white-space: nowrap; }
-  .qt td { padding: 8px 10px; border-bottom: 1px solid var(--line) !important; color: var(--ink-hi) !important; vertical-align: middle; }
-  .qt .n { text-align: right; font-variant-numeric: tabular-nums; }
-  .qt .m { color: var(--muted) !important; }
-  .qt td:nth-child(-n+5) { white-space: nowrap; }
-  .qt input { font: inherit; font-variant-numeric: tabular-nums; width: 5.5em; text-align: right; color: var(--ink-hi); background: var(--bg); border: 1px solid var(--line-2); padding: 6px 8px; min-height: 36px; }
-  .qt input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
-  .qt tr.chg td { background: #26304f; }
+  /* all orders */
+  .counts { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0 0 20px; }
+  .counts div { font-size: 14px; color: var(--muted); display: flex; align-items: baseline; gap: 8px; }
+  .counts b { font-size: 28px; font-weight: 600; letter-spacing: -0.03em; color: var(--ink-hi); font-variant-numeric: tabular-nums; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .list li { display: grid; grid-template-columns: 6.5em 9.5em 1fr; gap: 16px; align-items: baseline; padding: 14px 16px; background: var(--bg); font-size: 15px; }
+  .list li.me { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .list .t { font-size: 13px; font-weight: 600; padding: 4px 0; text-align: center; color: var(--bg); align-self: center; }
+  .list .o { font-weight: 600; }
+  .list .o span { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+  .list .f { color: var(--ink-hi); }
 
-  .term { background: #0c1224; color: #d9dcea; font-family: var(--code); font-size: 12.5px; line-height: 1.55; padding: 14px 16px; margin: 0; white-space: pre-wrap; word-break: break-word; min-height: 360px; max-height: 620px; overflow: auto; }
-  .term .cmd { color: var(--blue); }
-  .exit { font-size: 13.5px; color: var(--muted); margin-top: 8px; }
-  .exit b { color: var(--ink-hi); }
+  details.raw { background: var(--surface); padding: 0 var(--pad); }
+  details.raw summary { cursor: pointer; font-weight: 600; min-height: 60px; display: flex; align-items: center; }
+  details.raw p { color: var(--muted); margin: 0 0 12px; font-size: 15px; }
+  details.raw pre { background: #0c1224; color: #d9dcea; font-family: var(--code); font-size: 12.5px; line-height: 1.55; padding: 16px; margin: 0 0 var(--pad); max-height: 560px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+  .foot { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; color: var(--muted); font-size: 14px; padding-top: 8px; }
+  .status { color: var(--muted); font-size: 14px; margin: 0; }
 
-  .sum { display: flex; flex-wrap: wrap; gap: 6px 28px; margin: 0 0 14px; }
-  .sum div { font-size: 13px; color: var(--muted); }
-  .sum b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--ink-hi); }
-
-  .res { display: grid; gap: 4px; }
-  .ord { background: var(--bg); }
-  .ord summary { display: grid; grid-template-columns: 5.2em 6.5em 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; cursor: pointer; list-style: none; font-size: 14px; }
-  .ord summary::-webkit-details-marker { display: none; }
-  .ord summary:hover { background: #172040; }
-  .ord .who { color: var(--muted); font-size: 13px; display: block; }
-  .ord .rules { color: var(--ink-hi); }
-  .ord .more { color: var(--muted); font-size: 13px; }
-  .ord[open] .more { color: var(--ink-hi); }
-  .sev { font-size: 12px; font-weight: 600; padding: 4px 0; text-align: center; color: var(--bg); }
-  .sev.BLOCK { background: var(--accent); } .sev.HOLD { background: var(--amber); } .sev.WARN { background: var(--blue); }
-  .sev.INFO { background: var(--surface-2); color: var(--ink-hi); } .sev.CLEAN { background: var(--bid); }
-  .body { padding: 4px 14px 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 18px; }
-  .math { font-variant-numeric: tabular-nums; font-size: 14px; margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-content: start; }
-  .math dt { color: var(--muted); } .math dd { margin: 0; text-align: right; }
-  .math .tot { color: var(--ink-hi); font-weight: 600; padding-top: 8px; font-size: 16px; }
-  .finds { display: grid; gap: 12px; }
-  .find h3 { font-size: 14px !important; margin: 0 0 2px; letter-spacing: 0 !important; font-weight: 600; }
-  .find p { margin: 0 0 2px; font-size: 14px; color: var(--ink-hi); }
-  .find .c { color: var(--muted); font-size: 13px; }
-  .msg { background: var(--surface); padding: 10px 12px; font-size: 14px; margin-top: 4px; }
-  .msg span { color: var(--muted); font-size: 12.5px; display: block; margin-bottom: 2px; }
-
-  .src summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
-  .src pre { background: #0c1224; color: #d9dcea; font-family: var(--code); font-size: 12.5px; line-height: 1.5; padding: 14px 16px; margin: 8px 0 0; max-height: 560px; overflow: auto; }
-  .foot { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; color: var(--muted); font-size: 13.5px; padding-top: 8px; }
-  .foot a, .p a { color: var(--ink-hi); }
-
-  @media (max-width: 1180px) {
-    .c7, .c5 { grid-column: span 12; }
-    .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .flow li:nth-child(3)::before { display: none; }
-  }
-  @media (max-width: 680px) {
-    .flow { grid-template-columns: 1fr; }
-    .flow li::before { display: none; }
-    .ord summary { grid-template-columns: 5em 1fr; }
-    .ord .rules, .ord .more { grid-column: 2; }
-    .body { grid-template-columns: 1fr; }
-    .term { min-height: 220px; }
+  @media (max-width: 900px) { .three { grid-template-columns: 1fr; } }
+  @media (max-width: 620px) {
+    .list li { grid-template-columns: 5.5em 1fr; gap: 6px 12px; }
+    .list .f { grid-column: 1 / -1; }
+    .verdict { grid-template-columns: 1fr; padding: 18px; }
+    .verdict .tag { grid-row: auto; justify-self: start; }
   }
 </style>
 </head>
@@ -123,66 +90,62 @@
 
 <main class="app" id="main">
   <div class="top">
+    <h1>Oversell Guard</h1>
+    <p>A Python script that checks every sell order before it goes to Fidelity. Here it runs live in your browser on the Exception 1 trade, using fake data.</p>
+  </div>
+
+  <section class="p case" aria-labelledby="h-case">
     <div>
-      <h1>Oversell Guard, run live</h1>
-      <p>This is the Python script from Exception 1, running in your browser on ten fake sell orders. Change a quantity, press Run, and watch the rules decide.</p>
+      <h2 id="h-case">Exception 1: account #12345 holds 450 AAPL</h2>
+      <p class="ask">The advisor enters a sell. Pick the quantity and the script runs.</p>
     </div>
-    <div class="acts">
-      <button class="go" id="run" type="button" disabled>Loading Python…</button>
-      <button id="reset" type="button">Reset the orders</button>
-      <span class="status" id="status" role="status" aria-live="polite">Starting Python 3.12 in the browser</span>
+    <div class="seg" role="group" aria-label="Sell quantity">
+      <button type="button" data-q="500" aria-pressed="true" disabled>Sell 500 AAPL (as entered)</button>
+      <button type="button" data-q="450" aria-pressed="false" disabled>Sell 450 AAPL (corrected)</button>
     </div>
-  </div>
 
-  <ol class="flow" aria-label="How the script works">
-    <li><b><span>1</span>Read the books</b><p>Five CSVs: settled positions, pending activity (unsettled buys, ACATS in and out), corporate actions, advisor history and today's orders.</p></li>
-    <li><b><span>2</span>Work out what can be delivered</b><p>For each sell, in time order: <code>settled − pledged + confirmed buys by T+1 − ACATS out − sold earlier today</code>.</p></li>
-    <li><b><span>3</span>Apply rules R1 to R8</b><p>Fixed rules block, hold or warn. A blocked order does not use up the position, so a later sell is checked against what is really left.</p></li>
-    <li><b><span>4</span>Report</b><p>Writes <code>alerts.json</code> and <code>alerts.md</code>, drafts the advisor messages, and exits with code 1 if anything was blocked, so a scheduler can page someone.</p></li>
-  </ol>
+    <div class="verdict" id="verdict" aria-live="polite">
+      <span class="tag PASS" style="visibility:hidden">…</span>
+      <b>Starting Python in your browser…</b>
+      <span class="why">The first run takes a few seconds.</span>
+    </div>
 
-  <div class="grid">
-    <section class="p c7" aria-labelledby="h-in">
-      <h2 id="h-in">Input: today's sell orders, Nov 5, 2026</h2>
-      <p class="sub">Settlement is T+1, Nov 6. Edit any quantity, or try a change below.</p>
-      <div class="chips" aria-label="Try a change">
-        <button type="button" data-try="aapl">Sell 450 AAPL, not 500</button>
-        <button type="button" data-try="hold">Lift the legal hold on #78901</button>
-        <button type="button" data-try="dup">Cancel the repeat GOOGL order</button>
-        <button type="button" data-try="acats">Fidelity confirms the AMZN transfer</button>
+    <div class="three">
+      <div>
+        <h3>Can it deliver by settlement, Nov 6?</h3>
+        <dl class="math" id="math"></dl>
       </div>
-      <div class="tw">
-        <table class="qt">
-          <thead><tr><th>Order</th><th>Time</th><th>Account</th><th>Advisor</th><th>Symbol</th><th class="n">Sell qty</th><th class="n">Settled</th><th>Flags on file</th></tr></thead>
-          <tbody id="orders"><tr><td colspan="8" class="m">Loading the fake orders…</td></tr></tbody>
-        </table>
+      <div>
+        <h3>What Ops does</h3>
+        <div id="act"></div>
       </div>
-    </section>
-
-    <section class="p c5" aria-labelledby="h-out">
-      <h2 id="h-out">Terminal</h2>
-      <p class="sub">What <code>python3 oversell_guard.py</code> prints</p>
-      <pre class="term" id="term" aria-live="polite"><span class="cmd">$ python3 oversell_guard.py</span>
-
-Python is loading. The first run takes a few seconds.</pre>
-      <p class="exit" id="exit"></p>
-    </section>
-
-    <section class="p c12" aria-labelledby="h-res">
-      <h2 id="h-res">What the script decided, order by order</h2>
-      <p class="sub">Open an order to see the share math, each rule that fired, the rule it cites, and the message the advisor gets.</p>
-      <div class="sum" id="sum"></div>
-      <div class="res" id="res">
-        <noscript><p>This page runs the script with JavaScript. Without it, read the saved output in <a href="https://github.com/Rahul-Das-456/Savvy/blob/main/early-warning/out/alerts.md">alerts.md</a>: 10 sells, 5 blocked, 1 held, 2 warned, 2 clean.</p></noscript>
+      <div>
+        <h3>What the advisor sees</h3>
+        <div id="msg"></div>
       </div>
-    </section>
+    </div>
+    <p class="status" id="status" role="status"></p>
+  </section>
 
-    <section class="p c12 src" aria-labelledby="h-src">
-      <h2 id="h-src">The script</h2>
-      <p class="sub">The same file that is on <a href="https://github.com/Rahul-Das-456/Savvy/tree/main/early-warning">GitHub</a>. The page fetches it and runs it unchanged with Pyodide. The optional <code>--ai</code> step is not run here because it needs an API key.</p>
-      <details><summary>Show oversell_guard.py</summary><pre id="code">Loading…</pre></details>
-    </section>
-  </div>
+  <section class="p" aria-labelledby="h-all">
+    <h2 id="h-all">The same run, across all of today's sell orders</h2>
+    <p class="sub">The script checks every sell, not just this one. The other nine are fake orders that each test a different rule.</p>
+    <div class="counts" id="counts"></div>
+    <ul class="list" id="list">
+      <noscript><li>This page needs JavaScript to run the script. The saved output is in <a href="https://github.com/Rahul-Das-456/Savvy/blob/main/early-warning/out/alerts.md">alerts.md</a>.</li></noscript>
+    </ul>
+  </section>
+
+  <details class="raw">
+    <summary>Raw terminal output</summary>
+    <p>Exactly what <code>python3 oversell_guard.py</code> prints for the run above.</p>
+    <pre id="term"></pre>
+  </details>
+  <details class="raw">
+    <summary>The script (oversell_guard.py)</summary>
+    <p>Same file as on <a href="https://github.com/Rahul-Das-456/Savvy/tree/main/early-warning">GitHub</a>, run unchanged with Pyodide. The optional <code>--ai</code> brief is off here because it needs an API key.</p>
+    <pre id="code"></pre>
+  </details>
 
   <div class="foot">
     <span>Built by Rahul Das for a take-home exercise. Every account, advisor and order is fake.</span>
@@ -195,44 +158,17 @@ Python is loading. The first run takes a few seconds.</pre>
 (() => {
   const BASE = 'early-warning/';
   const FILES = ['positions', 'pending', 'corporate_actions', 'history', 'orders'];
+  const ME = 'ORD-1001';
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  let py = null, source = '', orig = {}, data = {};
+  let py = null, src = '', orig = {}, qty = '500';
 
-  const parse = (txt) => {
-    const [h, ...rows] = txt.trim().split(/\r?\n/);
-    const keys = h.split(',');
-    return rows.map((r) => { const v = r.split(','); return Object.fromEntries(keys.map((k, i) => [k, v[i] ?? ''])); });
-  };
-  const toCsv = (rows, keys) => [keys.join(','), ...rows.map((r) => keys.map((k) => r[k]).join(','))].join('\n') + '\n';
-  const sg = (n, s) => (n ? s + n : '0');
-  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const parse = (t) => { const [h, ...r] = t.trim().split(/\r?\n/); const k = h.split(','); return r.map((l) => { const v = l.split(','); return Object.fromEntries(k.map((x, i) => [x, v[i] ?? ''])); }); };
+  const toCsv = (rows) => { const k = Object.keys(rows[0]); return [k.join(','), ...rows.map((r) => k.map((x) => r[x]).join(','))].join('\n') + '\n'; };
 
-  function drawOrders() {
-    const pos = (a, s) => data.positions.find((p) => p.account === a && p.symbol === s);
-    $('#orders').innerHTML = data.orders.map((o, i) => {
-      const p = pos(o.account, o.symbol);
-      const flags = [];
-      if (p?.restriction) flags.push(p.restriction.replace('_', ' ').toLowerCase());
-      if (p && +p.pledged_qty) flags.push(`${p.pledged_qty} pledged`);
-      data.pending.filter((x) => x.account === o.account && x.symbol === o.symbol)
-        .forEach((x) => flags.push(`${x.type.replace('_', ' ').toLowerCase()} ${x.qty} (${x.status.toLowerCase().replace('_', ' ')})`));
-      data.corporate_actions.filter((c) => c.symbol === o.symbol).forEach((c) => flags.push(`${c.action.toLowerCase()} ex ${c.ex_date.slice(5)}`));
-      const was = orig.orders.find((x) => x.order_id === o.order_id); const changed = was && was.qty !== o.qty;
-      return `<tr class="${changed ? 'chg' : ''}"><td>${esc(o.order_id)}</td><td class="m">${esc(o.time)}</td><td>#${esc(o.account)}</td><td class="m">${esc(o.advisor)}</td><td>${esc(o.symbol)}</td>
-        <td class="n"><label class="sr-only" for="q${i}">Quantity for ${esc(o.order_id)}</label><input id="q${i}" type="number" inputmode="numeric" min="0" step="1" value="${esc(o.qty)}" data-i="${i}"></td>
-        <td class="n m">${p ? esc(p.settled_qty) : '0'}</td><td class="m">${esc(flags.join('; ') || '–')}</td></tr>`;
-    }).join('');
-  }
-
-  function writeData() {
-    const dir = '/home/pyodide/guard/data';
-    py.FS.mkdirTree(dir);
-    for (const f of FILES) {
-      const keys = Object.keys(orig[f][0] || {});
-      py.FS.writeFile(`${dir}/${f}.csv`, toCsv(data[f], keys));
-    }
-  }
+  const RANK = { BLOCK: 0, HOLD: 1, WARN: 2, INFO: 3 };
+  const VERB = { BLOCK: 'Blocked', HOLD: 'Held', WARN: 'Sent, flagged', PASS: 'Sent' };
+  const worst = (al) => { const s = al.filter((a) => a.severity !== 'INFO').sort((a, b) => RANK[a.severity] - RANK[b.severity])[0]; return s ? s.severity : 'PASS'; };
 
   const RUN = `
 import sys, io, json, contextlib, importlib
@@ -250,106 +186,85 @@ json.dumps(dict(stdout=buf.getvalue(), code=code, metrics=metrics,
 `;
 
   async function run() {
-    const btn = $('#run');
-    btn.disabled = true; btn.textContent = 'Running…';
-    $('#status').textContent = 'Running the script';
+    document.querySelectorAll('[data-q]').forEach((b) => { b.disabled = true; b.setAttribute('aria-pressed', String(b.dataset.q === qty)); });
+    const orders = orig.orders.map((o) => (o.order_id === ME ? { ...o, qty } : o));
+    py.FS.mkdirTree('/home/pyodide/guard/data');
+    for (const f of FILES) py.FS.writeFile(`/home/pyodide/guard/data/${f}.csv`, toCsv(f === 'orders' ? orders : orig[f]));
     try {
-      writeData();
-      const t0 = performance.now();
       const out = JSON.parse(await py.runPythonAsync(RUN));
-      const ms = Math.round(performance.now() - t0);
-      $('#term').innerHTML = `<span class="cmd">$ python3 oversell_guard.py</span>\n${esc(out.stdout.replace(/\/home\/pyodide\/guard\//g, ''))}`;
-      $('#exit').innerHTML = `Exit code <b>${out.code}</b>${out.code ? ': at least one order was blocked, so a scheduler would alert the desk.' : ': nothing blocked.'} Ran in ${ms} ms.`;
-      draw(out);
-      $('#status').textContent = `Done: ${out.metrics.blocked} blocked, ${out.metrics.held} held, ${out.metrics.warned} warned, ${out.metrics.clean} clean`;
+      $('#term').textContent = `$ python3 oversell_guard.py\n${out.stdout.replace(/\/home\/pyodide\/guard\//g, '')}\n$ echo $?\n${out.code}`;
+      draw(out, orders);
+      $('#status').textContent = 'Live result from oversell_guard.py, run in your browser just now.';
     } catch (e) {
-      $('#term').textContent += `\n\n${e.message}`;
-      $('#status').textContent = 'The script raised an error. See the terminal.';
+      $('#status').textContent = 'The script raised an error: ' + e.message;
     }
-    btn.disabled = false; btn.textContent = 'Run the script';
+    document.querySelectorAll('[data-q]').forEach((b) => { b.disabled = false; });
   }
 
-  const RANK = { BLOCK: 0, HOLD: 1, WARN: 2, INFO: 3, CLEAN: 4 };
-  const WORD = { BLOCK: 'Blocked', HOLD: 'Held', WARN: 'Warning', INFO: 'Note', CLEAN: 'Clean' };
-
-  function draw(out) {
-    const m = out.metrics;
-    $('#sum').innerHTML = [['Sells checked', m.sell_orders], ['Blocked', m.blocked], ['Held', m.held], ['Passed with a warning', m.warned], ['Clean', m.clean]]
-      .map(([l, v]) => `<div><b>${v}</b>${l}</div>`).join('');
+  function draw(out, orders) {
     const by = {};
     out.alerts.forEach((a) => (by[a.order_id] ||= []).push(a));
-    const sells = data.orders.filter((o) => o.side === 'SELL').slice().sort((a, b) => a.time.localeCompare(b.time));
-    $('#res').innerHTML = sells.map((o) => {
-      const al = by[o.order_id] || [];
-      const top = al.length ? al.reduce((x, a) => (RANK[a.severity] < RANK[x] ? a.severity : x), 'CLEAN') : 'CLEAN';
-      const label = top === 'INFO' ? 'Clean' : WORD[top];
-      const cls = top === 'INFO' ? 'INFO' : top;
-      const c = al[0]?.context;
-      const math = c ? `<dl class="math" aria-label="Share math">
-          <dt>Settled shares</dt><dd>${c.settled}</dd>
-          <dt>Pledged as collateral</dt><dd>${sg(c.pledged, "−")}</dd>
-          <dt>Confirmed buys settling by T+1</dt><dd>${sg(c.unsettled_buys, "+")}</dd>
-          <dt>Committed to ACATS out</dt><dd>${sg(c.ats_out, "−")}</dd>
-          <dt>Sold earlier today</dt><dd>${sg(c.sold_earlier_today, "−")}</dd>
-          <dt class="tot">Can deliver Nov 6</dt><dd class="tot">${al[0].available}</dd>
-          <dt>This order sells</dt><dd>${o.qty}</dd>
-          ${c.incoming_unconfirmed ? `<dt>Incoming, not yet confirmed</dt><dd>${c.incoming_unconfirmed}</dd>` : ''}
-        </dl>` : `<p class="m">Passed every rule. The script records nothing for a clean order and lets it go to Fidelity.</p>`;
-      const finds = al.map((a) => `<div class="find"><h3>${esc(a.severity)} · ${esc(a.rule)}</h3><p>${esc(a.finding)}</p><p>${esc(a.action)}</p><p class="c">${esc(a.cites)}</p>
-        ${a.message ? `<div class="msg"><span>Message to ${esc(a.advisor)}</span>${esc(a.message)}</div>` : ''}</div>`).join('');
-      return `<details class="ord"${top === 'BLOCK' && o.order_id === 'ORD-1001' ? ' open' : ''}><summary>
-          <span class="sev ${cls}">${label}</span>
-          <span>${esc(o.order_id)}<span class="who">${esc(o.time)}</span></span>
-          <span><span class="rules">${o.qty} ${esc(o.symbol)} · #${esc(o.account)}</span><span class="who">${al.filter((a) => a.severity !== 'INFO' || top === 'INFO').map((a) => esc(a.rule)).join(', ') || 'No rule fired'}</span></span>
-          <span class="more">Details</span></summary>
-        <div class="body">${math}<div class="finds">${finds || '<p class="m">No findings.</p>'}</div></div></details>`;
+
+    // the case
+    const al = by[ME] || [];
+    const sev = worst(al);
+    const main = al.find((a) => a.severity === sev) || al[0];
+    const c = main?.context || { settled: 450, pledged: 0, unsettled_buys: 0, ats_out: 0, sold_earlier_today: 0 };
+    const avail = main?.available ?? 450;
+    const short = Math.max(+qty - avail, 0);
+    $('#verdict').innerHTML = sev === 'BLOCK'
+      ? `<span class="tag BLOCK">Blocked</span><b>The order never reaches Fidelity. No trade break.</b><span class="why">It sells ${qty} AAPL but the account can deliver only ${avail} by settlement, so ${short} shares would fail.</span>`
+      : `<span class="tag PASS">Sent</span><b>The order goes to Fidelity and settles cleanly on Nov 6.</b><span class="why">It sells ${qty} AAPL and the account can deliver ${avail}.${al.some((a) => a.rule.startsWith('R5')) ? ' It sells the whole position, so the script adds a note to confirm the client meant a full exit.' : ''}</span>`;
+    const row = (k, v, cls = '') => `<dt class="${cls}">${k}</dt><dd class="${cls}">${v}</dd>`;
+    $('#math').innerHTML = row('Settled shares', c.settled)
+      + (c.pledged ? row('Pledged as collateral', '−' + c.pledged) : '')
+      + (c.unsettled_buys ? row('Buys settling by T+1', '+' + c.unsettled_buys) : '')
+      + (c.ats_out ? row('Leaving by transfer', '−' + c.ats_out) : '')
+      + (c.sold_earlier_today ? row('Sold earlier today', '−' + c.sold_earlier_today) : '')
+      + row('Can deliver', avail, 'big')
+      + row('Order sells', qty, 'big')
+      + row(short ? 'Short' : 'Short', short ? short + ' shares' : 'None', 'big ' + (short ? 'red' : 'green'));
+    const acts = al.filter((a) => a.severity !== 'INFO' || sev === 'PASS');
+    $('#act').innerHTML = acts.length
+      ? acts.map((a) => `<p>${esc(a.action)}</p><p class="cites">${esc(a.rule)} · ${esc(a.cites)}</p>`).join('')
+      : '<p>Nothing. The order passed every rule.</p>';
+    const m = al.find((a) => a.message);
+    $('#msg').innerHTML = m ? `<p class="quote">“${esc(m.message)}”</p><p class="cites">Sent automatically to ${esc(m.advisor)}.</p>` : '<p>A normal fill confirmation. No message needed.</p>';
+
+    // all orders
+    const mt = out.metrics;
+    $('#counts').innerHTML = `<div><b>${mt.sell_orders}</b>sells checked</div>` + [['blocked', mt.blocked, 'BLOCK'], ['held', mt.held, 'HOLD'], ['sent, flagged', mt.warned, 'WARN'], ['sent', mt.clean, 'PASS']]
+      .map(([l, v]) => `<div><b>${v}</b>${l}</div>`).join('');
+    $('#list').innerHTML = orders.filter((o) => o.side === 'SELL').sort((a, b) => a.time.localeCompare(b.time)).map((o) => {
+      const a = by[o.order_id] || [];
+      const s = worst(a);
+      const top = a.filter((x) => x.severity === s)[0];
+      const why = top ? top.finding : (a[0] ? a[0].finding + ' Passed.' : 'Passed every rule.');
+      return `<li class="${o.order_id === ME ? 'me' : ''}"><span class="t ${s}">${VERB[s]}</span>
+        <span class="o">${esc(o.qty)} ${esc(o.symbol)}<span>#${esc(o.account)} · ${esc(o.time.slice(0, 5))}</span></span>
+        <span class="f">${top ? `<b>${esc(top.rule.replace(/^R\d+ /, ''))}.</b> ` : ''}${esc(why)}</span></li>`;
     }).join('');
   }
 
-  const TRIES = {
-    aapl: () => { data.orders.find((o) => o.order_id === 'ORD-1001').qty = '450'; },
-    hold: () => { data.positions.find((p) => p.account === '78901').restriction = ''; },
-    dup: () => { data.orders = data.orders.filter((o) => o.order_id !== 'ORD-1009'); },
-    acats: () => { const p = data.pending.find((x) => x.type === 'ACATS_IN'); if (p) { p.type = 'BUY_UNSETTLED'; p.status = 'CONFIRMED'; p.expected_settle = '2026-11-06'; } },
-  };
-
   async function boot() {
     try {
-      const texts = await Promise.all([...FILES.map((f) => fetch(`${BASE}data/${f}.csv`).then((r) => r.text())), fetch(`${BASE}oversell_guard.py`).then((r) => r.text())]);
-      FILES.forEach((f, i) => { orig[f] = parse(texts[i]); });
-      source = texts[FILES.length];
-      $('#code').textContent = source;
-      data = clone(orig);
-      drawOrders();
-    } catch (e) {
-      $('#status').textContent = 'Could not load the data files.';
-      return;
-    }
+      const t = await Promise.all([...FILES.map((f) => fetch(`${BASE}data/${f}.csv`).then((r) => r.text())), fetch(`${BASE}oversell_guard.py`).then((r) => r.text())]);
+      FILES.forEach((f, i) => { orig[f] = parse(t[i]); });
+      src = t[FILES.length];
+      $('#code').textContent = src;
+    } catch (e) { $('#status').textContent = 'Could not load the data files.'; return; }
     try {
       py = await loadPyodide();
       py.FS.mkdirTree('/home/pyodide/guard');
-      py.FS.writeFile('/home/pyodide/guard/oversell_guard.py', source);
-      $('#run').disabled = false;
+      py.FS.writeFile('/home/pyodide/guard/oversell_guard.py', src);
       await run();
     } catch (e) {
-      $('#status').textContent = 'Python could not start in this browser. Showing the saved output.';
-      $('#run').textContent = 'Python unavailable';
-      try {
-        const saved = await fetch(`${BASE}out/alerts.json`).then((r) => r.json());
-        saved.alerts.forEach((a) => { a.message = ''; });
-        draw(saved);
-      } catch (_) {}
+      $('#status').textContent = 'Python could not start in this browser. Showing the saved output instead.';
+      try { const s = await fetch(`${BASE}out/alerts.json`).then((r) => r.json()); s.alerts.forEach((a) => { a.message ||= ''; }); draw(s, orig.orders); } catch (_) {}
     }
   }
 
-  $('#run').addEventListener('click', run);
-  $('#reset').addEventListener('click', () => { data = clone(orig); drawOrders(); if (py) run(); });
-  document.querySelectorAll('[data-try]').forEach((b) => b.addEventListener('click', () => { TRIES[b.dataset.try](); drawOrders(); if (py) run(); }));
-  $('#orders').addEventListener('change', (e) => {
-    const i = e.target.dataset.i; if (i == null) return;
-    const v = Math.max(0, Math.floor(+e.target.value || 0));
-    data.orders[i].qty = String(v); drawOrders(); if (py) run();
-  });
+  document.querySelectorAll('[data-q]').forEach((b) => b.addEventListener('click', () => { if (!py || b.dataset.q === qty) return; qty = b.dataset.q; run(); }));
   if (typeof loadPyodide === 'undefined') window.loadPyodide = () => Promise.reject(new Error('no pyodide'));
   boot();
 })();
